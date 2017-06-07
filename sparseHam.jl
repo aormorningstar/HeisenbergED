@@ -12,7 +12,7 @@ immutable couplings
 end;
 
 
-# function for building the sparse J-K Hamiltonian
+# function for building the sparse Hamiltonian
 function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice)
 
     # couplings
@@ -21,6 +21,10 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
     # momentum
     kx::Float64 = s.kx;
     ky::Float64 = s.ky;
+
+    # non-zero couplings
+    J1nz::Bool = (J1 != 0.0);
+    Knz::Bool = (K != 0.0);
 
     # store location and value of non-zero matrix elements
     I::Array{Int64} = Int64[];
@@ -40,7 +44,7 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
         Hbb::Complex128 = 0.0 + 0.0im;
 
         # loop over lattice sites
-        for site::Int64 in 1:l.N
+        for site::Int64 in 1:N
 
             # spins at nearby sites p1,p2,p3,p4,p1D,p2D,p1L,p3L
             p::Array{Int64,1} = l.nbrs[site];
@@ -58,8 +62,12 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
 
             # contribute to the diagonal matrix element
             # -----------------------------------------
-            Hbb += 0.25*J1*( sPw12 + sPw13 );
-            Hbb += 0.125*K*sPw1234;
+            if J1nz
+                Hbb += 0.25*J1*( sPw12 + sPw13 );
+            end;
+            if Knz
+                Hbb += 0.125*K*sPw1234;
+            end;
 
             # compute off diagonal matrix elements
             # ------------------------------------
@@ -97,7 +105,7 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
             end;
 
             # the 14 term
-            if sPw14 == -1
+            if sPw14 == -1 && Knz
                 # the bra
                 a14::UInt64 = XiXj(b,p[1],p[4]);
                 # the rep and transaltion of the bra
@@ -113,7 +121,7 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
             end;
 
             # the 23 term
-            if sPw23 == -1
+            if sPw23 == -1 && Knz
                 # the bra
                 a23::UInt64 = XiXj(b,p[2],p[3]);
                 # the rep and transaltion of the bra
@@ -129,7 +137,7 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
             end;
 
             # the 1234 term
-            if sp[1] + sp[2] + sp[3] + sp[4] == 2
+            if sp[1] + sp[2] + sp[3] + sp[4] == 2 && Knz
                 # the bra
                 a1234::UInt64 = XiXjXkXl(b,p[1],p[2],p[3],p[4]);
                 # the rep and transaltion of the bra
