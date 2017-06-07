@@ -128,8 +128,9 @@ end;
 function basisIndex(b::UInt64,basis::SzkxkyBasis)
     bIndex::UnitRange{Int64} = searchsorted(basis.b,b)::UnitRange{Int64};
     if !isempty(bIndex)
-        return bIndex[1]::Int64;
+        # return Int32 because basis has less than 2 billion elements and need to save these in sparse Hamiltonian
+        return Int32(bIndex[1])::Int32;
     else
-        return 0::Int64;
+        return Int32(0)::Int32;
     end;
 end;
