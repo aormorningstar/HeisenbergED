@@ -15,6 +15,10 @@ end;
 # function for building the sparse Hamiltonian
 function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice)
 
+    # lattice
+    Lx::Int64 = l.Lx;
+    Ly::Int64 = l.Ly;
+    N::Int64 = l.N;
     # couplings
     J1::Float64 = c.J1;
     K::Float64 = c.K;

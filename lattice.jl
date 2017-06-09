@@ -77,39 +77,44 @@ immutable lattice
     Ly::Int64;
     N::Int64;
     nbrs::Array{Array{Int64,1},1};
+    TxMask1::UInt64;
+    TxMask2::UInt64;
+    TyMask1::UInt64;
+    TyMask2::UInt64;
+    LxMinus1::Int64;
+    NMinusLx::Int64;
 
     function lattice(Lx::Int64,Ly::Int64,neighborVectors::Array{Tuple{Int64,Int64},1})
         neighborsList = [neighbors(site,neighborVectors,Lx,Ly) for site in 1:Lx*Ly];
-        new(Lx,Ly,Lx*Ly,neighborsList);
+
+        # rough code, needs cleanup
+        # ------------------------------------------
+        TxMx1::UInt64 = UInt64(1)<<(Lx-1)
+        TxMx2::UInt64 = TxMx1 - UInt64(1)
+        TxMask1::UInt64,TxMask2::UInt64 = TxMx1,TxMx2
+        for y in 1:Ly
+            TxMask1 = TxMask1 | (TxMx1 << y*Lx)
+            TxMask2 = TxMask2 | (TxMx2 << y*Lx)
+        end
+
+        TyMask1 = ((UInt64(1)<<Lx)-1) << (Lx * (Ly-1))
+        TyMask2 = (UInt64(1)<< (Lx * (Ly-1))) - 1
+        # -------------------------------------------
+
+        new(Lx,Ly,Lx*Ly,neighborsList,TxMask1,TxMask2,TyMask1,TyMask2,Lx-1,Lx*(Ly-1));
     end;
 end;
 
 
 # x translation operator
 function Tx(b::UInt64,l::lattice)
-    # loop over rows of the lattice
-    for y::Int in 0:l.Ly-1
-        # roll the row
-        for x::Int in l.Lx-1:-1:1
-            b = swapBits(b,y*l.Lx+1+x,y*l.Lx+x);
-        end;
-    end;
-
-    return b::UInt64;
+    return ((b & l.TxMask1) >> (l.LxMinus1) | ((b & l.TxMask2) << 1));
 end;
 
 
 # y translation operator
 function Ty(b::UInt64,l::lattice)
-    # loop over columns of the lattice
-    for x::Int in 0:l.Lx-1
-        # roll the column
-        for y::Int in l.Ly-1:-1:1
-            b = swapBits(b,y*l.Lx+x+1,(y-1)*l.Lx+x+1);
-        end;
-    end;
-
-    return b::UInt64;
+    return ((b & l.TyMask1) >> (l.NMinusLx) | ((b & l.TyMask2) << l.Lx));
 end;
 
 
