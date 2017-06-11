@@ -57,9 +57,9 @@ end;
 # the basis
 immutable SzkxkyBasis
     # list of representatives of momentum basis states in integer representation
-    b::Array{UInt64};
+    b::Array{UInt64,1};
     # list of corresponding normalization constants
-    n::Array{Float64};
+    n::Array{Float64,1};
     # dimension of Hilbert space
     dim::Int64;
 
@@ -126,8 +126,8 @@ end;
 
 # search ordered basis for index of integer representation of spin state
 function basisIndex(b::UInt64,basis::SzkxkyBasis)
-    bIndex::UnitRange{Int64} = searchsorted(basis.b,b)::UnitRange{Int64};
-    if !isempty(bIndex)
+    bIndex::UnitRange{Int64} = searchsorted(basis.b::Array{UInt64,1},b)::UnitRange{Int64};
+    if bIndex[1] != 0#!isempty(bIndex)
         # return Int32 because basis has less than 2 billion elements and need to save these in sparse Hamiltonian
         return Int32(bIndex[1])::Int32;
     else
