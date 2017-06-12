@@ -30,10 +30,11 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
     J1nz::Bool = (J1 != 0.0);
     Knz::Bool = (K != 0.0);
 
-    # store location and value of non-zero matrix elements
+    # store location and value of non-zero matrix elements in CSC format
+    Jpointers::Array{Int32,1} = Array{Int32,1}(basis.dim+1);
     I::Array{Int32,1} = Int32[];
-    J::Array{Int32,1} = Int32[];
     M::Array{Complex128,1} = Complex128[];
+    sortPerm::Array{Int64,1} = Int64[];
 
     # allocate memory once before the loops
     # -------------------------------------
@@ -54,6 +55,8 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
 
     # loop over basis
     for bIndex::Int64 in 1:basis.dim
+        # CSC formatting
+        Jpointers[bIndex] = Int32(length(I)+1);
 
         # spin states of basis
         b = basis.b[bIndex]; # integer rep.
@@ -115,7 +118,6 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
                     # the matrix element
                     Hsite = (0.5*J1+0.125*K*(sPw34-sPw1234+2*sPw1D2D))*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
 
-                    push!(J,bIndex);
                     push!(I,aRepIndex);
                     push!(M,Hsite);
                 end;
@@ -133,14 +135,13 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
                     # the matrix element
                     Hsite = (0.5*J1*+0.125*K*(sPw24-sPw1234+2*sPw1L3L))*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
 
-                    push!(J,bIndex);
                     push!(I,aRepIndex);
                     push!(M,Hsite);
                 end;
             end;
 
             # the 14 term
-            if c14
+            if c14 && K != 0.0
                 # the bra
                 a = XiXj(b,p[1],p[4]);
                 # the rep and transaltion of the bra
@@ -151,14 +152,13 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
                     # the matrix element
                     Hsite = -0.250*K*sPw23*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
 
-                    push!(J,bIndex);
                     push!(I,aRepIndex);
                     push!(M,Hsite);
                 end;
             end;
 
             # the 23 term
-            if c23
+            if c23 && K != 0.0
                 # the bra
                 a = XiXj(b,p[2],p[3]);
                 # the rep and transaltion of the bra
@@ -169,14 +169,13 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
                     # the matrix element
                     Hsite23= -0.25*K*sPw14*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
 
-                    push!(J,bIndex);
                     push!(I,aRepIndex);
                     push!(M,Hsite);
                 end;
             end;
 
             # the 1234 term
-            if c1234
+            if c1234 && K != 0.0
                 # the bra
                 a = XiXjXkXl(b,p[1],p[2],p[3],p[4]);
                 # the rep and transaltion of the bra
@@ -187,7 +186,6 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
                     # the matrix element
                     Hsite = 0.125*K*(2-sPw12-sPw34-sPw13-sPw24+sPw14+sPw23)*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
 
-                    push!(J,bIndex);
                     push!(I,aRepIndex);
                     push!(M,Hsite);
                 end;
@@ -196,12 +194,20 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
         end;
 
         # push diagonal matrix element to list of matrix elements
-        push!(J,bIndex);
         push!(I,bIndex);
         push!(M,Hbb);
 
+        # CSC formatting
+        sortPerm = sortperm(I[Jpointers[bIndex]:end]);
+        I[Jpointers[bIndex]:end] = (I[Jpointers[bIndex]:end])[sortPerm];
+        M[Jpointers[bIndex]:end] = (M[Jpointers[bIndex]:end])[sortPerm];
+
+
     end;
 
-    H::SparseMatrixCSC{Complex,Int32} = sparse(I,J,M,basis.dim,basis.dim);
+    # CSC formatting
+    Jpointers[end] = Int32(length(I)+1);
+
+    H::SparseMatrixCSC{Complex128,Int32} = SparseMatrixCSC{Complex128,Int32}(basis.dim, basis.dim, Jpointers, I, M);
     return H;
 end;
