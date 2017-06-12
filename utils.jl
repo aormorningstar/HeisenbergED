@@ -77,3 +77,32 @@ function simplePower(i::UInt64)
         return -1::Int64;
     end;
 end;
+
+# function for sorting two arrays in place based on the first of the arrays
+function sortTwo!(I::Array{Int32,1},M::Array{Complex128,1},low::Int64,high::Int64)
+    if low < high
+        p::Int64 = partition!(I,M,low,high);
+        sortTwo!(I,M,low,p);
+        sortTwo!(I,M,p+1,high);
+    end;
+end;
+function partition!(I::Array{Int32,1},M::Array{Complex128,1},low::Int64,high::Int64)
+    piv::Int32 = I[low];
+    i::Int64 = low;
+    j::Int64 = high;
+
+    while true
+        while I[i] < piv
+            i += 1;
+        end;
+        while I[j] > piv
+            j -= 1;
+        end;
+        if i >= j
+          return j;
+        end;
+        I[i],I[j],M[i],M[j] = I[j],I[i],M[j],M[i];
+        i += 1;
+        j -= 1;
+    end;
+end;
