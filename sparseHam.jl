@@ -111,12 +111,14 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
                 aRep,lx,ly = representative(a,l);
                 # search for this rep in the basis
                 aRepIndex = basisIndex(aRep,basis);
-                # the matrix element
-                Hsite = 0.5*J1+0.125*K*(sPw34-sPw1234+2*sPw1D2D)*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
+                if aRepIndex != 0
+                    # the matrix element
+                    Hsite = (0.5*J1+0.125*K*(sPw34-sPw1234+2*sPw1D2D))*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
 
-                push!(J,bIndex);
-                push!(I,aRepIndex);
-                push!(M,Hsite);
+                    push!(J,bIndex);
+                    push!(I,aRepIndex);
+                    push!(M,Hsite);
+                end;
             end;
 
             # the 13 term
@@ -127,12 +129,14 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
                 aRep,lx,ly = representative(a,l);
                 # search for this rep in the basis
                 aRepIndex = basisIndex(aRep,basis);
-                # the matrix element
-                Hsite = 0.5*J1*+0.125*K*(sPw24-sPw1234+2*sPw1L3L)*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
+                if aRepIndex != 0
+                    # the matrix element
+                    Hsite = (0.5*J1*+0.125*K*(sPw24-sPw1234+2*sPw1L3L))*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
 
-                push!(J,bIndex);
-                push!(I,aRepIndex);
-                push!(M,Hsite);
+                    push!(J,bIndex);
+                    push!(I,aRepIndex);
+                    push!(M,Hsite);
+                end;
             end;
 
             # the 14 term
@@ -143,12 +147,14 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
                 aRep,lx,ly = representative(a,l);
                 # search for this rep in the basis
                 aRepIndex = basisIndex(aRep,basis);
-                # the matrix element
-                Hsite = -0.250*K*sPw23*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
+                if aRepIndex !=0
+                    # the matrix element
+                    Hsite = -0.250*K*sPw23*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
 
-                push!(J,bIndex);
-                push!(I,aRepIndex);
-                push!(M,Hsite);
+                    push!(J,bIndex);
+                    push!(I,aRepIndex);
+                    push!(M,Hsite);
+                end;
             end;
 
             # the 23 term
@@ -159,28 +165,32 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
                 aRep,lx,ly = representative(a,l);
                 # search for this rep in the basis
                 aRepIndex = basisIndex(aRep,basis);
-                # the matrix element
-                Hsite23= -0.25*K*sPw14*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
+                if aRepIndex != 0
+                    # the matrix element
+                    Hsite23= -0.25*K*sPw14*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
 
-                push!(J,bIndex);
-                push!(I,aRepIndex);
-                push!(M,Hsite);
+                    push!(J,bIndex);
+                    push!(I,aRepIndex);
+                    push!(M,Hsite);
+                end;
             end;
 
             # the 1234 term
             if c1234
-              # the bra
-              a = XiXjXkXl(b,p[1],p[2],p[3],p[4]);
-              # the rep and transaltion of the bra
-              aRep,lx,ly = representative(a,l);
-              # search for this rep in the basis
-              aRepIndex = basisIndex(aRep,basis);
-                # the matrix element
-                Hsite = 0.125*K*(2-sPw12-sPw34-sPw13-sPw24+sPw14+sPw23)*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
+                # the bra
+                a = XiXjXkXl(b,p[1],p[2],p[3],p[4]);
+                # the rep and transaltion of the bra
+                aRep,lx,ly = representative(a,l);
+                # search for this rep in the basis
+                aRepIndex = basisIndex(aRep,basis);
+                if aRepIndex != 0
+                    # the matrix element
+                    Hsite = 0.125*K*(2-sPw12-sPw34-sPw13-sPw24+sPw14+sPw23)*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
 
-                push!(J,bIndex);
-                push!(I,aRepIndex);
-                push!(M,Hsite);
+                    push!(J,bIndex);
+                    push!(I,aRepIndex);
+                    push!(M,Hsite);
+                end;
             end;
 
         end;

@@ -127,7 +127,7 @@ end;
 # search ordered basis for index of integer representation of spin state
 function basisIndex(b::UInt64,basis::SzkxkyBasis)
     bIndex::UnitRange{Int64} = searchsorted(basis.b::Array{UInt64,1},b)::UnitRange{Int64};
-    if bIndex[1] != 0#!isempty(bIndex)
+    if !isempty(bIndex)
         # return Int32 because basis has less than 2 billion elements and need to save these in sparse Hamiltonian
         return Int32(bIndex[1])::Int32;
     else
