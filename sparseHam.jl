@@ -34,7 +34,6 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
     Jpointers::Array{Int32,1} = Array{Int32,1}(basis.dim+1);
     I::Array{Int32,1} = Int32[];
     M::Array{Complex128,1} = Complex128[];
-    sortPerm::Array{Int64,1} = Int64[];
 
     # allocate memory once before the loops
     # -------------------------------------
@@ -198,9 +197,7 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
         push!(M,Hbb);
 
         # CSC formatting
-        sortPerm = sortperm(I[Jpointers[bIndex]:end]);
-        I[Jpointers[bIndex]:end] = (I[Jpointers[bIndex]:end])[sortPerm];
-        M[Jpointers[bIndex]:end] = (M[Jpointers[bIndex]:end])[sortPerm];
+        sortTwo!(I[Jpointers[bIndex]:end],M[Jpointers[bIndex]:end],1,length(I[Jpointers[bIndex]:end]));
 
 
     end;
