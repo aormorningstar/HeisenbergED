@@ -132,7 +132,7 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
                 aRepIndex = basisIndex(aRep,basis);
                 if aRepIndex != 0
                     # the matrix element
-                    Hsite = (0.5*J1*+0.125*K*(sPw24-sPw1234+2*sPw1L3L))*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
+                    Hsite = (0.5*J1+0.125*K*(sPw24-sPw1234+2*sPw1L3L))*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
 
                     push!(I,aRepIndex);
                     push!(M,Hsite);
