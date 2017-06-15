@@ -48,7 +48,7 @@ function normConstant(b::UInt64,l::lattice,s::sector)
     end;
 
     # compute and return normalization constant
-    Na = abs2(F)*numUnique(Tbs);
+    Na = abs2(F)*numUnique!(Tbs);
 
     return Na;
 end;
