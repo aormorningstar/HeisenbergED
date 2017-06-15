@@ -38,13 +38,16 @@ function swapBits(i::UInt64,bit1::Int64,bit2::Int64)
 end;
 
 
-# count number of unique elements in an array
-function numUnique(Tbs::Array{UInt64,1})
+# count number of unique elements in an array of Ints
+# assumes length of list > 0
+function numUnique!(Tbs::Array{UInt64,1})
+    # first sort the list in place
+    sort!(Tbs);
     # num unique elements
-    num::Int64 = 0;
+    num::Int64 = 1;
     # scan over elements looking in previous elements
-    for i in 1:length(Tbs)
-        if !(Tbs[i] in Tbs[1:i-1])
+    for i::Int64 in 2:length(Tbs)
+        if Tbs[i] > Tbs[i-1]
             num += 1;
         end;
     end;
