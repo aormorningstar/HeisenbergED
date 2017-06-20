@@ -39,7 +39,6 @@ end;
 
 
 # count number of unique elements in an array of Ints
-# assumes length of list > 0
 function numUnique!(Tbs::Array{UInt64,1})
     # first sort the list in place
     sort!(Tbs);
@@ -80,6 +79,7 @@ function simplePower(i::UInt64)
         return -1::Int64;
     end;
 end;
+
 
 # function for sorting two arrays in place based on the first of the arrays
 function sortTwo!(I::Array{Int32,1},M::Array{Complex128,1},low::Int64,high::Int64)

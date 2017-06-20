@@ -3,6 +3,7 @@
 # Alan Morningstar
 # May 2017
 
+
 # container for Hamiltonian couplings
 immutable couplings
     # 1st nearest neighbor
@@ -95,12 +96,8 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
 
             # contribute to the diagonal matrix element
             # -----------------------------------------
-            if J1nz
-                Hbb += 0.25*J1*( sPw12 + sPw13 );
-            end;
-            if Knz
-                Hbb += 0.125*K*sPw1234;
-            end;
+
+            Hbb += 0.25*J1*( sPw12 + sPw13 ) + 0.125*K*sPw1234;
 
             # compute off diagonal matrix elements
             # ------------------------------------
