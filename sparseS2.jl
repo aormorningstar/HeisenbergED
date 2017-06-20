@@ -1,7 +1,7 @@
-# sparseHam.jl
-# sparse representatin of J-K Hamiltonian
+# sparseS2.jl
+# sparse representatin of S^2 operator
 # Alan Morningstar
-# May 2017
+# June 2017
 
 
 # function for building the sparse S^2 operator
