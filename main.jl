@@ -3,11 +3,13 @@
 # Alan Morningstar
 # May 2017
 
+using DataFrames;
 
 include("utils.jl");
 include("lattice.jl");
 include("basis.jl");
-include("sparseHam.jl")
+include("sparseHam.jl");
+include("sparseS2.jl");
 
 
 # main function
@@ -27,11 +29,11 @@ function main(Lx::Int64,Ly::Int64,J1::Float64,K::Float64,n1::Int64,mx::Int64,my:
     println("my = ",my);
 
     # number of eigenvalues desired
-    numEigs::Int64 = 4;
+    numEigs::Int64 = 6;
     # a tolerance for error
     tolerance::Float64 = 10.^(-5.);
     # ritzVec = true if you want the eigenvectors returned too
-    ritzVec::Bool = false;
+    ritzVec::Bool = true;
     # number of Krylov vectors in eigenvalue calculation
     numKrylovVecs::Int64 = 20;
     # maximum number of iterations to converge eigenvalues
@@ -53,17 +55,38 @@ function main(Lx::Int64,Ly::Int64,J1::Float64,K::Float64,n1::Int64,mx::Int64,my:
     c::couplings = couplings(J1,K);
 
     # build the sparse Hamiltonian
-    H::SparseMatrixCSC{Complex,Int64} = constructSparseHam(basis,c,s,l);
+    H::SparseMatrixCSC{Complex,Int32} = constructSparseHam(basis,c,s,l);
 
     # compute eigenvalues
     #:LM stands for largest magnitude, :SR for smallest real part
     eigsResult = eigs(H; nev=numEigs,ncv=numKrylovVecs,maxiter=maxIter, which=:SR, tol=tolerance, ritzvec=ritzVec);
 
-    # print results
-    print("Energies are: ",real(eigsResult[1]),". \n");
+    # build the sparse S^2 operator
+    S2::SparseMatrixCSC{Complex,Int32} = constructSparseS2(basis,s,l);
 
-    # return energies
-    return real(eigsResult[1]);
+    # compile data
+
+    # energies
+    EData::Array{Float64,1} = real(eigsResult[1]);
+    # Sz values
+    SzData::Array{Float64,1} = fill((N-2*n1)/2,numEigs);
+    # mx values
+    mxData::Array{Int64,1} = fill(mx,numEigs);
+    # my values
+    myData::Array{Int64,1} = fill(my,numEigs);
+    # S(S+1) values
+    S2Data::Array{Int64,1} = zeros(Int64,numEigs);
+    for i::Int64 in 1:numEigs
+      psi::Array{Complex128,1} = eigsResult[2][:,i];
+      S2Data[i] = round(Int64,real(dot(psi,S2*psi))[1])
+    end;
+
+    # create DataFrame
+    df::DataFrame = DataFrame(E=EData,Ssqrd=S2Data,Sz=SzData,mx=mxData,my=myData);
+    println(df);
+
+    return df;
+
 end;
 
 
@@ -75,15 +98,27 @@ const Ly = 4;
 # NN coupling
 const J1 = 1.0;
 # plaquette coupling
-const K = Float64[0.0];
+const K = 0.0;
 
 # choose Sz sector by specifying number of 1s in basis states
-const n1 = Int64[convert(Int64,(Lx*Ly)/2)];
+const n1List = convert(Int64,(Lx*Ly)/2):(convert(Int64,(Lx*Ly)/2)+5);
 # choose kx,ky by specifying mi such that mi is in 0:Li-1
-const mx = Int64[0];
-const my = Int64[0];
+const mxList = 0:(Lx-1);
+const myList = 0:(Ly-1);
 
 
-#-- execute main function
+#-- execute main function for all parameter values and collect data
+data = DataFrame();
 
-r1 = main(Lx,Ly,J1,K[1],n1[1],mx[1],my[1]);
+for n1 in n1List
+    for mx in mxList
+        for my in myList
+            df = main(Lx,Ly,J1,K,n1[1],mx[1],my[1]);
+            data = vcat(data,df);
+        end;
+    end;
+end;
+
+# write data
+dataFileName = "specData/Lx=" * string(Lx) * "_Ly=" * string(Ly) * "_J1=" * string(J1) * "_K=" * string(K) * ".csv";
+writetable(dataFileName, data);
