@@ -79,7 +79,7 @@ immutable SzkxkyBasis
             n::Float64 = normConstant(b,l,s);
 
             # if valid rep state, add info to basis
-            if n > 0.0
+            if n > 0.00001
                 push!(bList,b);
                 push!(nList,n);
             end;
