@@ -9,11 +9,11 @@ include("utils.jl");
 include("lattice.jl");
 include("basis.jl");
 include("sparseHam.jl");
-include("sparseS2.jl");
+# include("sparseS2.jl");
 
 
 # main function
-function main(Lx::Int64,Ly::Int64,J1::Float64,K::Float64,n1::Int64,mx::Int64,my::Int64)
+function main(Lx::Int64,Ly::Int64,J1::Float64,J2::Float64,K::Float64,n1::Int64,mx::Int64,my::Int64)
     # number of lattice sites
     N::Int64 = Lx*Ly;
     # momentum
@@ -22,7 +22,8 @@ function main(Lx::Int64,Ly::Int64,J1::Float64,K::Float64,n1::Int64,mx::Int64,my:
 
     # print details
     println("N = ",N);
-    println("J = ",J1);
+    println("J1 = ",J1);
+    println("J2 = ",J2);
     println("K = ",K);
     println("n1 = ",n1);
     println("mx = ",mx);
@@ -49,23 +50,26 @@ function main(Lx::Int64,Ly::Int64,J1::Float64,K::Float64,n1::Int64,mx::Int64,my:
 
     # construct the basis
     basis::SzkxkyBasis = SzkxkyBasis(l,s);
-    print("Dimension of reduced Hilbert space is ",basis.dim,". \n");
+    println("Dimension of reduced Hilbert space is ",basis.dim,".");
 
     # couplings type to make passing J1,K easier
-    c::couplings = couplings(J1,K);
+    c::couplings = couplings(J1,J2,K);
 
     # build the sparse Hamiltonian
+    println("Building the Hamiltonian.");
     H::SparseMatrixCSC{Complex,Int32} = constructSparseHam(basis,c,s,l);
 
     # compute eigenvalues
     #:LM stands for largest magnitude, :SR for smallest real part
+    println("Computing eigenvalues and eigenvectors.");
     eigsResult = eigs(H; nev=numEigs,ncv=numKrylovVecs,maxiter=maxIter, which=:SR, tol=tolerance, ritzvec=ritzVec);
 
     # build the sparse S^2 operator
-    S2::SparseMatrixCSC{Complex,Int32} = constructSparseS2(basis,s,l);
+    # println("Building the S^2 operator.");
+    # S2::SparseMatrixCSC{Complex,Int32} = constructSparseS2(basis,s,l);
 
     # compile data
-
+    println("Compiling data.");
     # energies
     EData::Array{Float64,1} = real(eigsResult[1]);
     # Sz values
@@ -75,14 +79,18 @@ function main(Lx::Int64,Ly::Int64,J1::Float64,K::Float64,n1::Int64,mx::Int64,my:
     # my values
     myData::Array{Int64,1} = fill(my,numEigs);
     # S(S+1) values
-    S2Data::Array{Int64,1} = zeros(Int64,numEigs);
-    for i::Int64 in 1:numEigs
-      psi::Array{Complex128,1} = eigsResult[2][:,i];
-      S2Data[i] = round(Int64,real(dot(psi,S2*psi))[1])
-    end;
+    # S2Data::Array{Int64,1} = zeros(Int64,numEigs);
+    # println("Compiling data 2.");
+    # for i::Int64 in 1:numEigs
+    #   psi::Array{Complex128,1} = eigsResult[2][:,i];
+    #   println("Compiling data 3.");
+    #   S2Data[i] = round(Int64,real(dot(psi,S2*psi))[1])
+    # end;
 
     # create DataFrame
-    df::DataFrame = DataFrame(E=EData,Ssqrd=S2Data,Sz=SzData,mx=mxData,my=myData);
+    println("Filling DataFrame.");
+    df::DataFrame = DataFrame(E=EData,Sz=SzData,mx=mxData,my=myData);
+    #,Ssqrd=S2Data);
     println(df);
 
     return df;
@@ -93,15 +101,17 @@ end;
 #-- specify parameters of the calculation
 
 # square lattice length
-const Lx = 4;
+const Lx = 6;
 const Ly = 4;
 # NN coupling
 const J1 = 1.0;
+# NNN coupling
+const J2 = 0.0;
 # plaquette coupling
 const K = 0.0;
 
 # choose Sz sector by specifying number of 1s in basis states
-const n1List = convert(Int64,(Lx*Ly)/2):(convert(Int64,(Lx*Ly)/2)+5);
+const n1List = convert(Int64,(Lx*Ly)/2):(convert(Int64,(Lx*Ly)/2)+8);
 # choose kx,ky by specifying mi such that mi is in 0:Li-1
 const mxList = 0:(Lx-1);
 const myList = 0:(Ly-1);
@@ -113,12 +123,12 @@ data = DataFrame();
 for n1 in n1List
     for mx in mxList
         for my in myList
-            df = main(Lx,Ly,J1,K,n1[1],mx[1],my[1]);
+            df = main(Lx,Ly,J1,J2,K,n1[1],mx[1],my[1]);
             data = vcat(data,df);
         end;
     end;
 end;
 
 # write data
-dataFileName = "specData/Lx=" * string(Lx) * "_Ly=" * string(Ly) * "_J1=" * string(J1) * "_K=" * string(K) * ".csv";
+dataFileName = "specData/Lx=" * string(Lx) * "_Ly=" * string(Ly) * "_J1=" * string(J1) * "_J2=" * string(J2) * "_K=" * string(K) * ".csv";
 writetable(dataFileName, data);

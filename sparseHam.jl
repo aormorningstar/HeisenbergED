@@ -8,6 +8,8 @@
 immutable couplings
     # 1st nearest neighbor
     J1::Float64;
+    # 2nd nearest neighbor
+    J2::Float64;
     # plaquette terms
     K::Float64;
 end;
@@ -22,6 +24,7 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
     N::Int64 = l.N;
     # couplings
     J1::Float64 = c.J1;
+    J2::Float64 = c.J2;
     K::Float64 = c.K;
     # momentum
     kx::Float64 = s.kx;
@@ -29,6 +32,7 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
 
     # non-zero couplings
     J1nz::Bool = (J1 != 0.0);
+    J2nz::Bool = (J2 != 0.0);
     Knz::Bool = (K != 0.0);
 
     # store location and value of non-zero matrix elements in CSC format
@@ -87,17 +91,20 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
             sPw1L3L = simplePower(sp[7] + sp[8]);
 
             # some conditions
-            c12 = (sPw12 == -1);
-            c13 = (sPw13 == -1);
-            c14 = (sPw14 == -1 && Knz);
-            c23 = (sPw23 == -1 && Knz);
-            c1234 = (sp[1] + sp[2] + sp[3] + sp[4] == 2 && Knz);
+            c12 = ((sPw12 == -1) && (Knz || J1nz));
+            c13 = ((sPw13 == -1) && (Knz || J1nz));
+            c14 = ((sPw14 == -1) && (Knz || J2nz));
+            c23 = ((sPw23 == -1) && (Knz || J2nz));
+            c1234 = ((sp[1] + sp[2] + sp[3] + sp[4] == 2) && Knz);
 
 
             # contribute to the diagonal matrix element
             # -----------------------------------------
             if J1nz
                 Hbb += 0.25*J1*( sPw12 + sPw13 );
+            end;
+            if J2nz
+                Hbb += 0.25*J2*( sPw14 + sPw23 );
             end;
             if Knz
                 Hbb += 0.125*K*sPw1234;
@@ -150,7 +157,7 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
                 aRepIndex = basisIndex(aRep,basis);
                 if aRepIndex !=0
                     # the matrix element
-                    Hsite = -0.25*K*sPw23*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
+                    Hsite = (0.5*J2-0.25*K*sPw23)*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
 
                     push!(I,aRepIndex);
                     push!(M,Hsite);
@@ -167,7 +174,7 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
                 aRepIndex = basisIndex(aRep,basis);
                 if aRepIndex != 0
                     # the matrix element
-                    Hsite23= -0.25*K*sPw14*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
+                    Hsite23= (0.5*J2-0.25*K*sPw14)*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
 
                     push!(I,aRepIndex);
                     push!(M,Hsite);
