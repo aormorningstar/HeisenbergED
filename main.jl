@@ -106,12 +106,12 @@ const Ly = 4;
 # NN coupling
 const J1 = 1.0;
 # NNN coupling
-const J2 = 0.0;
+const J2 = 0.6;
 # plaquette coupling
 const K = 0.0;
 
 # choose Sz sector by specifying number of 1s in basis states
-const n1List = convert(Int64,(Lx*Ly)/2):(convert(Int64,(Lx*Ly)/2)+8);
+const n1List = convert(Int64,(Lx*Ly)/2):(convert(Int64,(Lx*Ly)/2)+6);
 # choose kx,ky by specifying mi such that mi is in 0:Li-1
 const mxList = 0:(Lx-1);
 const myList = 0:(Ly-1);
