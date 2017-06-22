@@ -9,7 +9,7 @@ include("utils.jl");
 include("lattice.jl");
 include("basis.jl");
 include("sparseHam.jl");
-# include("sparseS2.jl");
+include("sparseS2.jl");
 
 
 # main function
@@ -65,8 +65,8 @@ function main(Lx::Int64,Ly::Int64,J1::Float64,J2::Float64,K::Float64,n1::Int64,m
     eigsResult = eigs(H; nev=numEigs,ncv=numKrylovVecs,maxiter=maxIter, which=:SR, tol=tolerance, ritzvec=ritzVec);
 
     # build the sparse S^2 operator
-    # println("Building the S^2 operator.");
-    # S2::SparseMatrixCSC{Complex,Int32} = constructSparseS2(basis,s,l);
+    println("Building the S^2 operator.");
+    S2::SparseMatrixCSC{Complex,Int32} = constructSparseS2(basis,s,l);
 
     # compile data
     println("Compiling data.");
@@ -79,18 +79,21 @@ function main(Lx::Int64,Ly::Int64,J1::Float64,J2::Float64,K::Float64,n1::Int64,m
     # my values
     myData::Array{Int64,1} = fill(my,numEigs);
     # S(S+1) values
-    # S2Data::Array{Int64,1} = zeros(Int64,numEigs);
-    # println("Compiling data 2.");
-    # for i::Int64 in 1:numEigs
-    #   psi::Array{Complex128,1} = eigsResult[2][:,i];
-    #   println("Compiling data 3.");
-    #   S2Data[i] = round(Int64,real(dot(psi,S2*psi))[1])
-    # end;
+    S2Data::Array{Int64,1} = zeros(Int64,numEigs);
+    # allocate memory before loop
+    psi::Array{Complex128,1} = Array{Complex128,1}(basis.dim);
+    S2psi::Array{Complex128,1} = Array{Complex128,1}(basis.dim);
+    println("Compiling data 2.");
+    for i::Int64 in 1:numEigs
+        psi = eigsResult[2][:,i];
+        S2psi = S2*psi;
+        println("Compiling data 3.");
+        S2Data[i] = round(Int64,real(dot(psi,S2psi))[1])
+    end;
 
     # create DataFrame
     println("Filling DataFrame.");
-    df::DataFrame = DataFrame(E=EData,Sz=SzData,mx=mxData,my=myData);
-    #,Ssqrd=S2Data);
+    df::DataFrame = DataFrame(E=EData,Ssqrd=S2Data,Sz=SzData,mx=mxData,my=myData);
     println(df);
 
     return df;
@@ -101,17 +104,17 @@ end;
 #-- specify parameters of the calculation
 
 # square lattice length
-const Lx = 6;
+const Lx = 4;
 const Ly = 4;
 # NN coupling
 const J1 = 1.0;
 # NNN coupling
-const J2 = 0.6;
+const J2 = 0.4;
 # plaquette coupling
-const K = 0.0;
+const K = 0.3;
 
 # choose Sz sector by specifying number of 1s in basis states
-const n1List = convert(Int64,(Lx*Ly)/2):(convert(Int64,(Lx*Ly)/2)+6);
+const n1List = convert(Int64,(Lx*Ly)/2):(convert(Int64,(Lx*Ly)/2)+5);
 # choose kx,ky by specifying mi such that mi is in 0:Li-1
 const mxList = 0:(Lx-1);
 const myList = 0:(Ly-1);
@@ -123,7 +126,7 @@ data = DataFrame();
 for n1 in n1List
     for mx in mxList
         for my in myList
-            df = main(Lx,Ly,J1,J2,K,n1[1],mx[1],my[1]);
+            df = main(Lx,Ly,J1,J2,K,n1,mx,my);
             data = vcat(data,df);
         end;
     end;
