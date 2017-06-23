@@ -83,16 +83,13 @@ function main(Lx::Int64,Ly::Int64,J1::Float64,J2::Float64,K::Float64,n1::Int64,m
     # allocate memory before loop
     psi::Array{Complex128,1} = Array{Complex128,1}(basis.dim);
     S2psi::Array{Complex128,1} = Array{Complex128,1}(basis.dim);
-    println("Compiling data 2.");
     for i::Int64 in 1:numEigs
         psi = eigsResult[2][:,i];
-        S2psi = S2*psi;
-        println("Compiling data 3.");
+        A_mul_B!(S2psi,S2,psi);
         S2Data[i] = round(Int64,real(dot(psi,S2psi))[1])
     end;
 
     # create DataFrame
-    println("Filling DataFrame.");
     df::DataFrame = DataFrame(E=EData,Ssqrd=S2Data,Sz=SzData,mx=mxData,my=myData);
     println(df);
 
@@ -109,12 +106,12 @@ const Ly = 4;
 # NN coupling
 const J1 = 1.0;
 # NNN coupling
-const J2 = 0.4;
+const J2 = 0.0;
 # plaquette coupling
-const K = 0.3;
+const K = 0.0;
 
 # choose Sz sector by specifying number of 1s in basis states
-const n1List = convert(Int64,(Lx*Ly)/2):(convert(Int64,(Lx*Ly)/2)+5);
+const n1List = (convert(Int64,(Lx*Ly)/2)-4):convert(Int64,(Lx*Ly)/2);
 # choose kx,ky by specifying mi such that mi is in 0:Li-1
 const mxList = 0:(Lx-1);
 const myList = 0:(Ly-1);
