@@ -91,8 +91,8 @@ function constructSparseS2(basis::SzkxkyBasis,s::sector,l::lattice)
         push!(I,bIndex);
         push!(M,S2bb);
 
-        # CSC formatting
-        sortTwo!(I[Jpointers[bIndex]:end],M[Jpointers[bIndex]:end],1,length(I[Jpointers[bIndex]:end]));
+        # CSC formatting (turns out this is unnecessary)
+        # sortTwo!(I[Jpointers[bIndex]:end],M[Jpointers[bIndex]:end],1,length(I[Jpointers[bIndex]:end]));
 
     end;
 
