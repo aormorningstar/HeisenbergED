@@ -104,14 +104,15 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
 
             # contribute to the diagonal matrix element
             # -----------------------------------------
+            # NOTE: the leading factor of 0.5 in each diagonal term is due to the Hermitian sparse matrix which requires diagonal elements to be divided by 2 before being passed
             if J1nz
-                Hbb += 0.25*J1*( sPw12 + sPw13 );
+                Hbb += 0.5*0.25*J1*( sPw12 + sPw13 ); # see NOTE
             end;
             if J2nz
-                Hbb += 0.25*J2*( sPw14 + sPw23 );
+                Hbb += 0.5*0.25*J2*( sPw14 + sPw23 ); # see NOTE
             end;
             if Knz
-                Hbb += 0.125*K*sPw1234;
+                Hbb += 0.5*0.125*K*sPw1234; # see NOTE
             end;
 
             # compute off diagonal matrix elements
@@ -125,7 +126,7 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
                 aRep,lx,ly = representative(a,l);
                 # search for this rep in the basis
                 aRepIndex = basisIndex(aRep,basis);
-                if aRepIndex != 0
+                if aRepIndex != 0 && bIndex > aRepIndex # only keep upper triangle
                     # the matrix element
                     Hsite = (0.5*J1+0.125*K*(sPw34-sPw1234+2*sPw1D2D))*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
 
@@ -143,7 +144,7 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
                 aRep,lx,ly = representative(a,l);
                 # search for this rep in the basis
                 aRepIndex = basisIndex(aRep,basis);
-                if aRepIndex != 0
+                if aRepIndex != 0 && bIndex > aRepIndex # only keep upper triangle
                     # the matrix element
                     Hsite = (0.5*J1+0.125*K*(sPw24-sPw1234+2*sPw1L3L))*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
 
@@ -161,7 +162,7 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
                 aRep,lx,ly = representative(a,l);
                 # search for this rep in the basis
                 aRepIndex = basisIndex(aRep,basis);
-                if aRepIndex !=0
+                if aRepIndex !=0 && bIndex > aRepIndex # only keep upper triangle
                     # the matrix element
                     Hsite = (0.5*J2-0.25*K*sPw23)*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
 
@@ -179,7 +180,7 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
                 aRep,lx,ly = representative(a,l);
                 # search for this rep in the basis
                 aRepIndex = basisIndex(aRep,basis);
-                if aRepIndex != 0
+                if aRepIndex != 0 && bIndex > aRepIndex # only keep upper triangle
                     # the matrix element
                     Hsite= (0.5*J2-0.25*K*sPw14)*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
 
@@ -197,7 +198,7 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
                 aRep,lx,ly = representative(a,l);
                 # search for this rep in the basis
                 aRepIndex = basisIndex(aRep,basis);
-                if aRepIndex != 0
+                if aRepIndex != 0 && bIndex > aRepIndex # only keep upper triangle
                     # the matrix element
                     Hsite = 0.125*K*(2-sPw12-sPw34-sPw13-sPw24+sPw14+sPw23)*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
 
