@@ -42,6 +42,7 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
 
     # allocate memory once before the loops
     # -------------------------------------
+    # nnz::Int64 = 0;
     b::UInt64 = 0;
     sb::Array{UInt64,1} = Array{UInt64,1}(l.N);
     nb::Float64 = 0.0;
@@ -61,6 +62,9 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
     for bIndex::Int64 in 1:basis.dim
         # CSC formatting
         Jpointers[bIndex] = Int32(length(I)+1);
+
+        # count non-zero values
+        # nnz = 0;
 
         # spin states of basis
         b = basis.b[bIndex]; # integer rep.
@@ -127,6 +131,7 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
 
                     push!(I,aRepIndex);
                     push!(M,Hsite);
+                    # nnz += 1;
                 end;
             end;
 
@@ -144,6 +149,7 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
 
                     push!(I,aRepIndex);
                     push!(M,Hsite);
+                    # nnz += 1;
                 end;
             end;
 
@@ -161,6 +167,7 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
 
                     push!(I,aRepIndex);
                     push!(M,Hsite);
+                    # nnz += 1;
                 end;
             end;
 
@@ -178,6 +185,7 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
 
                     push!(I,aRepIndex);
                     push!(M,Hsite);
+                    # nnz += 1;
                 end;
             end;
 
@@ -195,6 +203,7 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
 
                     push!(I,aRepIndex);
                     push!(M,Hsite);
+                    # nnz += 1;
                 end;
             end;
 
@@ -203,9 +212,10 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
         # push diagonal matrix element to list of matrix elements
         push!(I,bIndex);
         push!(M,Hbb);
+        # nnz += 1;
 
-        # CSC formatting
-        sortTwo!(I[Jpointers[bIndex]:end],M[Jpointers[bIndex]:end],1,length(I[Jpointers[bIndex]:end]));
+        # CSC formatting (turns out this is unnecessary)
+        # sortTwo!(I,M,Int64(Jpointers[bIndex]),Int64(Jpointers[bIndex])+nnz-1);
 
 
     end;
@@ -213,6 +223,7 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
     # CSC formatting
     Jpointers[end] = Int32(length(I)+1);
 
-    H::SparseMatrixCSC{Complex128,Int32} = SparseMatrixCSC{Complex128,Int32}(basis.dim, basis.dim, Jpointers, I, M);
+    # H::SparseMatrixCSC{Complex128,Int32} = SparseMatrixCSC{Complex128,Int32}(basis.dim, basis.dim, Jpointers, I, M);
+    H::sparseHermitian = sparseHermitian(basis.dim,basis.dim,Jpointers,I,M);
     return H;
 end;
