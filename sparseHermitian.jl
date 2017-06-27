@@ -20,7 +20,8 @@ immutable sparseHermitian
 
 end;
 
-function matVecSparseHermitian!(M::sparseHermitian,y::Vector{Complex128},x::Vector{Complex128})
+function matVecSparseHermitian!(M::sparseHermitian,y::AbstractVector,x::AbstractVector)
+
     # NOTE: this assumes the sparse Hermitian matrix has been built properly, with diagonal matrix elements divided by 2, and only the upper triangle of the off-diagonal elements included
 
     # clear output vector
@@ -33,5 +34,7 @@ function matVecSparseHermitian!(M::sparseHermitian,y::Vector{Complex128},x::Vect
             y[j] += x[M.rowIndcs[i]]*conj(M.nzVals[i]);
         end;
     end;
+
+    return y::AbstractVector;
 
 end;
