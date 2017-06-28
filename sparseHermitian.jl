@@ -3,7 +3,7 @@
 # Alan Morningstar
 # June 2017
 
-immutable sparseHermitian
+struct sparseHermitian{TypeI,TypeM}
 
     # NOTE: diagonal elements here should have been divided by 2, only the upper triangle of the off diagonal elements are included
 
@@ -12,15 +12,15 @@ immutable sparseHermitian
     # number of columns in the matrix
     nCols::Int64;
     # indices of the first non-zero value of each column
-    colPntrs::Array{Int32,1};
+    colPntrs::Vector{TypeI};
     # row indices of non-zero elements
-    rowIndcs::Array{Int32,1};
+    rowIndcs::Vector{TypeI};
     # non-zero matrix element values
-    nzVals::Array{Complex128,1};
+    nzVals::Vector{TypeM};
 
 end;
 
-function matVecSparseHermitian!(M::sparseHermitian,y::AbstractVector,x::AbstractVector)
+function Base.A_mul_B!(y::AbstractVector,M::sparseHermitian,x::AbstractVector)
 
     # NOTE: this assumes the sparse Hermitian matrix has been built properly, with diagonal matrix elements divided by 2, and only the upper triangle of the off-diagonal elements included
 
@@ -38,3 +38,21 @@ function matVecSparseHermitian!(M::sparseHermitian,y::AbstractVector,x::Abstract
     return y::AbstractVector;
 
 end;
+
+Base.size(M::sparseHermitian) = (M.nRows, M.nCols);
+
+Base.length(M::sparseHermitian) = reduce(*, size(M))
+
+Base.ndims(M::sparseHermitian) = 2;
+
+Base.eltype(M::sparseHermitian) = eltype(M.nzVals);
+
+Base.issymmetric(M::sparseHermitian) = false;
+
+Base.ishermitian(M::sparseHermitian) = true;
+
+Base.nnz(M::sparseHermitian) = length(M.nzVals);
+
+Base.:*(M::sparseHermitian,x::AbstractVector) = Base.A_mul_B!(similar(x,promote_type(Base.eltype(M),eltype(x)),size(M,1)),M,x);
+
+Base.Ac_mul_B!(y::AbstractVector,M::sparseHermitian,x::AbstractVector) = Base.A_mul_B!(y,M,x);

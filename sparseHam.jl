@@ -36,9 +36,9 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
     Knz::Bool = (K != 0.0);
 
     # store location and value of non-zero matrix elements in CSC format
-    Jpointers::Array{Int32,1} = Array{Int32,1}(basis.dim+1);
-    I::Array{Int32,1} = Int32[];
-    M::Array{Complex128,1} = Complex128[];
+    Jpointers::Vector{Int32} = Vector{Int32}(basis.dim+1);
+    I::Vector{Int32} = Int32[];
+    M::Vector{Complex128} = Complex128[];
 
     # allocate memory once before the loops
     # -------------------------------------
@@ -225,6 +225,6 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
     Jpointers[end] = Int32(length(I)+1);
 
     # H::SparseMatrixCSC{Complex128,Int32} = SparseMatrixCSC{Complex128,Int32}(basis.dim, basis.dim, Jpointers, I, M);
-    H::sparseHermitian = sparseHermitian(basis.dim,basis.dim,Jpointers,I,M);
+    H::sparseHermitian{Int32,Complex128} = sparseHermitian{Int32,Complex128}(basis.dim,basis.dim,Jpointers,I,M);
     return H;
 end;
