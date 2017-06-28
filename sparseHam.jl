@@ -39,6 +39,7 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
     Jpointers::Vector{Int32} = Vector{Int32}(basis.dim+1);
     I::Vector{Int32} = Int32[];
     M::Vector{Complex128} = Complex128[];
+    Mpointers::Vector{Int32} = Int32[];
 
     # allocate memory once before the loops
     # -------------------------------------
@@ -131,7 +132,8 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
                     Hsite = (0.5*J1+0.125*K*(sPw34-sPw1234+2*sPw1D2D))*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
 
                     push!(I,aRepIndex);
-                    push!(M,Hsite);
+                    # push!(M,Hsite);
+                    push!(Mpointers,appendSet!(Hsite,M));
                     # nnz += 1;
                 end;
             end;
@@ -149,7 +151,8 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
                     Hsite = (0.5*J1+0.125*K*(sPw24-sPw1234+2*sPw1L3L))*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
 
                     push!(I,aRepIndex);
-                    push!(M,Hsite);
+                    # push!(M,Hsite);
+                    push!(Mpointers,appendSet!(Hsite,M));
                     # nnz += 1;
                 end;
             end;
@@ -167,7 +170,8 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
                     Hsite = (0.5*J2-0.25*K*sPw23)*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
 
                     push!(I,aRepIndex);
-                    push!(M,Hsite);
+                    # push!(M,Hsite);
+                    push!(Mpointers,appendSet!(Hsite,M));
                     # nnz += 1;
                 end;
             end;
@@ -185,7 +189,8 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
                     Hsite= (0.5*J2-0.25*K*sPw14)*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
 
                     push!(I,aRepIndex);
-                    push!(M,Hsite);
+                    # push!(M,Hsite);
+                    push!(Mpointers,appendSet!(Hsite,M));
                     # nnz += 1;
                 end;
             end;
@@ -203,7 +208,8 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
                     Hsite = 0.125*K*(2-sPw12-sPw34-sPw13-sPw24+sPw14+sPw23)*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
 
                     push!(I,aRepIndex);
-                    push!(M,Hsite);
+                    # push!(M,Hsite);
+                    push!(Mpointers,appendSet!(Hsite,M));
                     # nnz += 1;
                 end;
             end;
@@ -212,7 +218,8 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
 
         # push diagonal matrix element to list of matrix elements
         push!(I,bIndex);
-        push!(M,Hbb);
+        # push!(M,Hbb);
+        push!(Mpointers,appendSet!(Hbb,M));
         # nnz += 1;
 
         # CSC formatting (turns out this is unnecessary)
@@ -225,6 +232,7 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
     Jpointers[end] = Int32(length(I)+1);
 
     # H::SparseMatrixCSC{Complex128,Int32} = SparseMatrixCSC{Complex128,Int32}(basis.dim, basis.dim, Jpointers, I, M);
-    H::sparseHermitian{Int32,Complex128} = sparseHermitian{Int32,Complex128}(basis.dim,basis.dim,Jpointers,I,M);
+    # H::sparseHermitian{Int32,Complex128} = sparseHermitian{Int32,Complex128}(basis.dim,basis.dim,Jpointers,I,M);
+    H::sparseHermitian{Int32,Complex128} = sparseHermitian{Int32,Complex128}(basis.dim,basis.dim,Jpointers,I,M,Mpointers);
     return H;
 end;

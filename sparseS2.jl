@@ -19,6 +19,7 @@ function constructSparseS2(basis::SzkxkyBasis,s::sector,l::lattice)
     Jpointers::Vector{Int32} = Array{Int32}(basis.dim+1);
     I::Vector{Int32} = Int32[];
     M::Vector{Complex128} = Complex128[];
+    Mpointers::Vector{Int32} = Int32[];
 
     # allocate memory once before the loops
     # -------------------------------------
@@ -81,7 +82,8 @@ function constructSparseS2(basis::SzkxkyBasis,s::sector,l::lattice)
                         S2ij = 0.5*(1-sPwij[i,j])*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
 
                         push!(I,aRepIndex);
-                        push!(M,S2ij);
+                        # push!(M,S2ij);
+                        push!(Mpointers,appendSet!(S2ij,M));
                     end;
                 end;
 
@@ -90,7 +92,8 @@ function constructSparseS2(basis::SzkxkyBasis,s::sector,l::lattice)
 
         # push diagonal matrix element to list of matrix elements
         push!(I,bIndex);
-        push!(M,S2bb);
+        # push!(M,S2bb);
+        push!(Mpointers,appendSet!(S2bb,M));
 
         # CSC formatting (turns out this is unnecessary)
         # sortTwo!(I[Jpointers[bIndex]:end],M[Jpointers[bIndex]:end],1,length(I[Jpointers[bIndex]:end]));
@@ -101,7 +104,8 @@ function constructSparseS2(basis::SzkxkyBasis,s::sector,l::lattice)
     Jpointers[end] = Int32(length(I)+1);
 
     # S2::SparseMatrixCSC{Complex128,Int32} = SparseMatrixCSC{Complex128,Int32}(basis.dim, basis.dim, Jpointers, I, M);
-    S2::sparseHermitian{Int32,Complex128} = sparseHermitian{Int32,Complex128}(basis.dim,basis.dim,Jpointers,I,M);
+    # S2::sparseHermitian{Int32,Complex128} = sparseHermitian{Int32,Complex128}(basis.dim,basis.dim,Jpointers,I,M);
+    S2::sparseHermitian{Int32,Complex128} = sparseHermitian{Int32,Complex128}(basis.dim,basis.dim,Jpointers,I,M,Mpointers);
 
     return S2;
 end;

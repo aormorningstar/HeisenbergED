@@ -109,3 +109,20 @@ function partition!(I::Array{Int32,1},M::Array{Complex128,1},low::Int64,high::In
         j -= 1;
     end;
 end;
+
+
+# find the index of the first instance of an element in a set, if it doesn't exist, append the element and return it's index
+function appendSet!{T<:Number}(elem::T,set::Vector{T})
+
+    for (index::Int64,item::T) in enumerate(set)
+        if elem == item
+            return index::Int64;
+        end;
+    end;
+
+    # if it wasn't found, append the element
+    push!(set,elem);
+
+    return length(set)::Int64;
+
+end;
