@@ -8,6 +8,7 @@ using DataFrames;
 include("utils.jl");
 include("lattice.jl");
 include("basis.jl");
+include("sparseHermitian.jl");
 include("sparseHam.jl");
 include("sparseS2.jl");
 
@@ -57,16 +58,12 @@ function main(Lx::Int64,Ly::Int64,J1::Float64,J2::Float64,K::Float64,n1::Int64,m
 
     # build the sparse Hamiltonian
     println("Building the Hamiltonian.");
-    H::SparseMatrixCSC{Complex,Int32} = constructSparseHam(basis,c,s,l);
+    H::sparseHermitian{Int32,Complex128} = constructSparseHam(basis,c,s,l);
 
     # compute eigenvalues
     #:LM stands for largest magnitude, :SR for smallest real part
     println("Computing eigenvalues and eigenvectors.");
     eigsResult = eigs(H; nev=numEigs,ncv=numKrylovVecs,maxiter=maxIter, which=:SR, tol=tolerance, ritzvec=ritzVec);
-
-    # build the sparse S^2 operator
-    println("Building the S^2 operator.");
-    S2::SparseMatrixCSC{Complex,Int32} = constructSparseS2(basis,s,l);
 
     # compile data
     println("Compiling data.");
@@ -85,7 +82,7 @@ function main(Lx::Int64,Ly::Int64,J1::Float64,J2::Float64,K::Float64,n1::Int64,m
     S2psi::Array{Complex128,1} = Array{Complex128,1}(basis.dim);
     for i::Int64 in 1:numEigs
         psi = eigsResult[2][:,i];
-        A_mul_B!(S2psi,S2,psi);
+        S2_mul_psi!(basis,s,l,S2psi,psi);
         S2Data[i] = round(Int64,real(dot(psi,S2psi))[1])
     end;
 
@@ -111,7 +108,7 @@ const J2 = 0.0;
 const K = 0.0;
 
 # choose Sz sector by specifying number of 1s in basis states
-const n1List = (convert(Int64,(Lx*Ly)/2)-4):convert(Int64,(Lx*Ly)/2);
+const n1List = (convert(Int64,(Lx*Ly)/2)):convert(Int64,(Lx*Ly)/2);
 # choose kx,ky by specifying mi such that mi is in 0:Li-1
 const mxList = 0:(Lx-1);
 const myList = 0:(Ly-1);
@@ -130,5 +127,5 @@ for n1 in n1List
 end;
 
 # write data
-dataFileName = "specData/Lx=" * string(Lx) * "_Ly=" * string(Ly) * "_J1=" * string(J1) * "_J2=" * string(J2) * "_K=" * string(K) * ".csv";
-writetable(dataFileName, data);
+dataFileName = "specData/testing_Sz=0_Lx=" * string(Lx) * "_Ly=" * string(Ly) * "_J1=" * string(J1) * "_J2=" * string(J2) * "_K=" * string(K) * ".csv";
+writetable(dataFileName, sort(data));
