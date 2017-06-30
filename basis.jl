@@ -15,20 +15,18 @@ end;
 
 
 # function for computing the normalization constant Na such that the momentum state is 1/sqrt(Na) * sum(phase * TxTy |b>)
-function normConstant(b::UInt64,l::lattice,s::sector)
+function normConstant{I<:Integer}(b::I,l::lattice,s::sector)
 
     # sum of phases
     F::Complex128 = 0.0+0.0im;
-    # normalization constant
-    Na::Float64 = 0.0;
     # currrent translated state
-    Tb::UInt64 = b;
+    Tb::I = b;
     # set of translated states in integer rep.
-    Tbs::Array{UInt64,1} = Array{UInt64}(l.N);
+    Tbs::Array{I,1} = Array{I}(l.N);
 
     # perform all translations
-    for y in 0:l.Ly-1
-        for x in 0:l.Lx-1
+    for y::Int64 in 0:l.Ly-1
+        for x::Int64 in 0:l.Lx-1
             # add to set of translated states
             Tbs[y*l.Lx+x+1] = Tb;
 
@@ -48,35 +46,41 @@ function normConstant(b::UInt64,l::lattice,s::sector)
     end;
 
     # compute and return normalization constant
-    Na = abs2(F)*numUnique!(Tbs);
+    Na::Float64 = abs2(F)*numUnique!(Tbs);
 
     return Na;
 end;
 
 
 # the basis
-immutable SzkxkyBasis
+immutable SzkxkyBasis{I<:Integer}
     # list of representatives of momentum basis states in integer representation
-    b::Array{UInt64,1};
+    b::Array{I,1};
     # list of corresponding normalization constants
     n::Array{Float64,1};
     # dimension of Hilbert space
     dim::Int64;
 
     # constructor
-    function SzkxkyBasis(l::lattice,s::sector)
+    SzkxkyBasis{I}(l::lattice,s::sector) where {I} =
+    begin
         # initialize list of reps of momentum basis elements
-        bList::Array{UInt64,1} = UInt64[];
+        bList::Array{I,1} = Array{I,1}();
         # initialize list of normalization constants
         nList::Array{Float64,1} = Float64[];
 
         # run up the binary odometer of Sz states
         # start with first n1 bits in state 1(down)
-        b::UInt64 = 2^s.n1-1;
+        b::I = convert(I,2^s.n1-1);
+
+        # allocate memory
+        n::Float64 = 0.0;
+        i::Int64 = 0;
+        bit::Int64 = 0;
 
         while true
             # check if this state meets the required kx,ky
-            n::Float64 = normConstant(b,l,s);
+            n = normConstant(b,l,s);
 
             # if valid rep state, add info to basis
             if n > 0.00001
@@ -85,20 +89,20 @@ immutable SzkxkyBasis
             end;
 
             # counter of 1 bits to the right (in binary convention)
-            i::Int = 0;
+            i = 0;
             # position in bit array
-            bit::Int = 1;
+            bit = 1;
             while bit < l.N
                 # find a 1 bit whose following neighbor is 0
-                if readBit(b,bit) == 0x1
-                    if readBit(b,bit+1) == 0x1
+                if readBit(b,bit) == 1
+                    if readBit(b,bit+1) == 1
                         i += 1;
                     else
                         # shuffle bits over
-                        for J in 1:i
+                        for J::Int64 in 1:i
                             b = setBit(b,J);
                         end;
-                        for J in i+1:bit
+                        for J::Int64 in i+1:bit
                             b = clearBit(b,J);
                         end;
                         b = setBit(b,bit+1);
@@ -125,8 +129,8 @@ end;
 
 
 # search ordered basis for index of integer representation of spin state
-function basisIndex(b::UInt64,basis::SzkxkyBasis)
-    bIndex::UnitRange{Int64} = searchsorted(basis.b::Array{UInt64,1},b)::UnitRange{Int64};
+function basisIndex{I<:Integer}(b::I,basis::SzkxkyBasis{I})
+    bIndex::UnitRange{Int64} = searchsorted(basis.b::Array{I,1},b)::UnitRange{Int64};
     if !isempty(bIndex)
         # return Int32 because basis has less than 2 billion elements and need to save these in sparse Hamiltonian
         return Int32(bIndex[1])::Int32;
@@ -134,3 +138,7 @@ function basisIndex(b::UInt64,basis::SzkxkyBasis)
         return Int32(0)::Int32;
     end;
 end;
+
+
+# return the type of the basis elements
+Base.eltype(basis::SzkxkyBasis) = eltype(basis.b);

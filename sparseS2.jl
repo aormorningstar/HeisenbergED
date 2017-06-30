@@ -15,6 +15,9 @@ function constructSparseS2(basis::SzkxkyBasis,s::sector,l::lattice)
     kx::Float64 = s.kx;
     ky::Float64 = s.ky;
 
+    # basis type
+    bType::Type = eltype(basis);
+
     # store location and value of non-zero matrix elements in CSC format
     Jpointers::Vector{Int32} = Array{Int32}(basis.dim+1);
     I::Vector{Int32} = Int32[];
@@ -23,13 +26,13 @@ function constructSparseS2(basis::SzkxkyBasis,s::sector,l::lattice)
 
     # allocate memory once before the loops
     # -------------------------------------
-    b::UInt64 = 0;
-    sb::Array{UInt64,1} = Array{UInt64,1}(N);
+    b::bType = 0;
+    sb::Array{bType,1} = Array{bType,1}(N);
     nb::Float64 = 0.0;
     S2bb::Complex128 = 0.0+0.0im;
     sPwij::Array{Int64,2} = Array{Int64,2}(N,N);
-    a::UInt64 = UInt64(0);
-    aRep::UInt64 = UInt64(0);
+    a::bType = convert(bType,0);
+    aRep::bType = convert(bType,0);
     lx::Int64 = ly::Int64 = 0;
     aRepIndex::Int32 = Int32(0);
     S2ij::Complex128 = 0.0+0.0im;
@@ -125,15 +128,18 @@ function S2_mul_psi!(basis::SzkxkyBasis,s::sector,l::lattice,S2psi::Vector{Compl
     kx::Float64 = s.kx;
     ky::Float64 = s.ky;
 
+    # basis type
+    bType::Type = eltype(basis);
+
     # allocate memory once before the loops
     # -------------------------------------
-    b::UInt64 = 0;
-    sb::Array{UInt64,1} = Array{UInt64,1}(N);
+    b::bType = 0;
+    sb::Array{bType,1} = Array{bType,1}(N);
     nb::Float64 = 0.0;
     S2bb::Complex128 = 0.0+0.0im;
     sPwij::Array{Int64,2} = Array{Int64,2}(N,N);
-    a::UInt64 = UInt64(0);
-    aRep::UInt64 = UInt64(0);
+    a::bType = convert(bType,0);
+    aRep::bType = convert(bType,0);
     lx::Int64 = ly::Int64 = 0;
     aRepIndex::Int32 = Int32(0);
     S2ij::Complex128 = 0.0+0.0im;

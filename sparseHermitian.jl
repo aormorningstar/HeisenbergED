@@ -6,7 +6,7 @@
 
 # type
 
-struct sparseHermitian{TypeI,TypeM}
+immutable sparseHermitian{TI<:Integer,TM<:Number}
 
     # NOTE: diagonal elements here should have been divided by 2, only the upper triangle of the off diagonal elements are included
 
@@ -15,25 +15,25 @@ struct sparseHermitian{TypeI,TypeM}
     # number of columns in the matrix
     nCols::Int64;
     # indices of the first non-zero value of each column
-    colPntrs::Vector{TypeI};
+    colPntrs::Vector{TI};
     # row indices of non-zero elements
-    rowIndcs::Vector{TypeI};
+    rowIndcs::Vector{TI};
     # non-zero matrix element values
-    nzVals::Vector{TypeM};
+    nzVals::Vector{TM};
 
     ## optional for matrices with few unique matrix element values ##
     # non-zero matrix element pointers
-    nzPntrs::Vector{TypeI};
+    nzPntrs::Vector{TI};
     # sparse pointer matrix
     sparsePntrs::Bool;
 
     # constructors
 
     # not a sparse matrix of pointers to matrix elements
-    sparseHermitian{TypeI,TypeM}(nRows::Int64, nCols::Int64, colPntrs::Vector{TypeI}, rowIndcs::Vector{TypeI}, nzVals::Vector{TypeM}) where {TypeI,TypeM} = new(nRows::Int64, nCols::Int64, colPntrs::Vector{TypeI}, rowIndcs::Vector{TypeI}, nzVals::Vector{TypeM},Vector{TypeI}(),false);
+    sparseHermitian{TI,TM}(nRows::Int64, nCols::Int64, colPntrs::Vector{TI}, rowIndcs::Vector{TI}, nzVals::Vector{TM}) where {TI,TM} = new(nRows::Int64, nCols::Int64, colPntrs::Vector{TI}, rowIndcs::Vector{TI}, nzVals::Vector{TM},Vector{TI}(),false);
 
     # a sparse matrix of pointers to matrix elements
-    sparseHermitian{TypeI,TypeM}(nRows::Int64, nCols::Int64, colPntrs::Vector{TypeI}, rowIndcs::Vector{TypeI}, nzVals::Vector{TypeM}, nzPntrs::Vector{TypeI}) where {TypeI,TypeM} = new(nRows::Int64, nCols::Int64, colPntrs::Vector{TypeI}, rowIndcs::Vector{TypeI}, nzVals::Vector{TypeM}, nzPntrs::Vector{TypeI}, true);
+    sparseHermitian{TI,TM}(nRows::Int64, nCols::Int64, colPntrs::Vector{TI}, rowIndcs::Vector{TI}, nzVals::Vector{TM}, nzPntrs::Vector{TI}) where {TI,TM} = new(nRows::Int64, nCols::Int64, colPntrs::Vector{TI}, rowIndcs::Vector{TI}, nzVals::Vector{TM}, nzPntrs::Vector{TI}, true);
 
 end;
 
@@ -46,7 +46,7 @@ function Base.A_mul_B!(y::AbstractVector,M::sparseHermitian,x::AbstractVector)
     # NOTE: this assumes the sparse Hermitian matrix has been built properly, with diagonal matrix elements divided by 2, and only the upper triangle of the off-diagonal elements included
 
     # clear output vector
-    y .= 0.0 + 0.0im;
+    y .= 0;
 
     # fill output vector
     if !M.sparsePntrs

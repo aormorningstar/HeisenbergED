@@ -5,41 +5,41 @@
 
 
 # set a bit to 1
-function setBit(i::UInt64,bit::Int64)
-    return (i | (1 << UInt64(bit-1)))::UInt64;
+function setBit{I<:Integer}(i::I,bit::Int64)
+    return (i | (1 << (bit-1)))::I;
 end;
 
 
 # set a bit to 0
-function clearBit(i::UInt64,bit::Int64)
-    return (i & (~(UInt64(1) << UInt64(bit-1))))::UInt64;
+function clearBit{I<:Integer}(i::I,bit::Int64)
+    return convert(I,(Int64(i) & (~(1 << (bit-1)))));
 end;
 
 
 # toggle a bit
-function toggleBit(i::UInt64,bit::Int64)
-    return xor(i , (UInt64(1) << UInt64(bit-1)))::UInt64;
+function toggleBit{I<:Integer}(i::I,bit::Int64)
+    return xor(i , (1 << (bit-1)))::I;
 end;
 
 
 # read a bit
-function readBit(i::UInt64,bit::Int64)
-    return ((i >> UInt64(bit-1)) & UInt64(1))::UInt64;
+function readBit{I<:Integer}(i::I,bit::Int64)
+    return Int64((i >> (bit-1)) & 1);
 end;
 
 
 # swap two bits
-function swapBits(i::UInt64,bit1::Int64,bit2::Int64)
+function swapBits{I<:Integer}(i::I,bit1::Int64,bit2::Int64)
     if readBit(i,bit1) == readBit(i,bit2)
-        return i::UInt64;
+        return i::I;
     else
-        return xor(i , ( (UInt64(1)<<UInt64(bit1-1)) | (UInt64(1)<<UInt64(bit2-1)) ))::UInt64;
+        return xor(i , ( (1<<(bit1-1)) | (1<<(bit2-1)) ))::I;
     end;
 end;
 
 
 # count number of unique elements in an array of Ints
-function numUnique!(Tbs::Array{UInt64,1})
+function numUnique!{I<:Real}(Tbs::Array{I,1})
     # first sort the list in place
     sort!(Tbs);
     # num unique elements
@@ -56,24 +56,24 @@ end;
 
 
 # function for flipping two spins of a basis state
-function XiXj(b::UInt64,i::Int64,j::Int64)
+function XiXj{I<:Integer}(b::I,i::Int64,j::Int64)
     # b - integer rep of state
     # i,j - sites of spin flips
-    return xor(b , ( (UInt64(1)<<UInt64(i-1)) | (UInt64(1)<<UInt64(j-1)) ));
+    return xor(b , ( (1<<(i-1)) | (1<<(j-1)) ))::I;
 end;
 
 
 # function for flipping four spins of a basis state
-function XiXjXkXl(b::UInt64,i::Int,j::Int,k::Int,l::Int)
+function XiXjXkXl{I<:Integer}(b::I,i::Int64,j::Int64,k::Int64,l::Int64)
     # b - integer rep of state
     # i,j,k,l - sites of spin flips
-    return xor(b , ( (UInt64(1)<<UInt64(i-1)) | (UInt64(1)<<UInt64(j-1)) | (UInt64(1)<<UInt64(k-1)) | (UInt64(1)<<UInt64(l-1)) ));
+    return xor(b , ( (1<<(i-1)) | (1<<(j-1)) | (1<<(k-1)) | (1<<(l-1)) ))::I;
 end;
 
 
 # function for computing (-1)^(positive integer)
-function simplePower(i::UInt64)
-    if readBit(i,1) == UInt64(0)
+function simplePower{I<:Integer}(i::I)
+    if readBit(i,1) == 0
         return 1::Int64;
     else
         return -1::Int64;
@@ -82,15 +82,15 @@ end;
 
 
 # function for sorting two arrays in place based on the first of the arrays
-function sortTwo!(I::Array{Int32,1},M::Array{Complex128,1},low::Int64,high::Int64)
+function sortTwo!{TI,TM}(I::Array{TI,1},M::Array{TM,1},low::Int64,high::Int64)
     if low < high
         p::Int64 = partition!(I,M,low,high);
         sortTwo!(I,M,low,p);
         sortTwo!(I,M,p+1,high);
     end;
 end;
-function partition!(I::Array{Int32,1},M::Array{Complex128,1},low::Int64,high::Int64)
-    piv::Int32 = I[low];
+function partition!{TI,TM}(I::Array{TI,1},M::Array{TM,1},low::Int64,high::Int64)
+    piv::TI = I[low];
     i::Int64 = low;
     j::Int64 = high;
 
@@ -112,7 +112,7 @@ end;
 
 
 # find the index of the first instance of an element in a set (vector), if it's not in the set then append the element and return it's index
-function appendSet!{T<:Number}(elem::T,set::Vector{T})
+function appendSet!{T}(elem::T,set::Vector{T})
 
     for (index::Int64,item::T) in enumerate(set)
         if elem == item

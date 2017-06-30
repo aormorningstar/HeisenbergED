@@ -35,6 +35,9 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
     J2nz::Bool = (J2 != 0.0);
     Knz::Bool = (K != 0.0);
 
+    # basis type
+    bType::Type = eltype(basis);
+
     # store location and value of non-zero matrix elements in CSC format
     Jpointers::Vector{Int32} = Vector{Int32}(basis.dim+1);
     I::Vector{Int32} = Int32[];
@@ -44,16 +47,16 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
     # allocate memory once before the loops
     # -------------------------------------
     # nnz::Int64 = 0;
-    b::UInt64 = 0;
-    sb::Array{UInt64,1} = Array{UInt64,1}(l.N);
+    b::bType = 0;
+    sb::Array{bType,1} = Array{bType,1}(l.N);
     nb::Float64 = 0.0;
     Hbb::Complex128 = 0.0+0.0im;
     p::Array{Int64,1} = Array{Int64,1}(length(l.nbrs[1]));
-    sp::Array{UInt64,1} = Array{UInt64,1}(length(p));
+    sp::Array{bType,1} = Array{UInt64,1}(length(p));
     sPw12::Int64 = sPw34::Int64 = sPw13::Int64 = sPw24::Int64 = sPw14::Int64 = sPw23::Int64 = sPw1234::Int64 = sPw1D2D::Int64 = sPw1L3L::Int64 = 0;
     c12::Bool = c13::Bool = c14::Bool = c23::Bool = c1234::Bool = true;
-    a::UInt64 = UInt64(0);
-    aRep::UInt64 = UInt64(0);
+    a::bType = convert(bType,0);
+    aRep::bType = convert(bType,0);
     lx::Int64 = ly::Int64 = 0;
     aRepIndex::Int32 = Int32(0);
     Hsite::Complex128 = 0.0+0.0im;
