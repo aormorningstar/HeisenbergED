@@ -59,8 +59,7 @@ function constructSparseS2(basis::SzkxkyBasis,s::sector,l::lattice)
         end;
 
         # initialize the diagonal matrix element
-        # NOTE: the leading factor of 0.5 in each diagonal term is due to the Hermitian sparse matrix which requires diagonal elements to be divided by 2 before being passed
-        S2bb = 0.5*(0.75*N + 0.0im); # see NOTE
+        S2bb = 0.75*N + 0.0im;
 
         # loop over pairs of lattice sites
         for i::Int64 in 1:N
@@ -68,7 +67,7 @@ function constructSparseS2(basis::SzkxkyBasis,s::sector,l::lattice)
 
                 # contribute to the diagonal matrix element
                 # -----------------------------------------
-                S2bb += 0.5*0.5*sPwij[i,j]; # see NOTE
+                S2bb += 0.5*sPwij[i,j];
 
                 # compute off diagonal matrix elements
                 # ------------------------------------
@@ -85,8 +84,9 @@ function constructSparseS2(basis::SzkxkyBasis,s::sector,l::lattice)
                         S2ij = 0.5*(1-sPwij[i,j])*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
 
                         push!(I,aRepIndex);
-                        # push!(M,S2ij);
                         push!(Mpointers,appendSet!(S2ij,M));
+                    elseif bIndex == aRepIndex
+                        S2bb += 0.5*(1-sPwij[i,j]);
                     end;
                 end;
 
@@ -94,20 +94,15 @@ function constructSparseS2(basis::SzkxkyBasis,s::sector,l::lattice)
         end;
 
         # push diagonal matrix element to list of matrix elements
+        # NOTE: the leading factor of 0.5 in each diagonal term is due to the Hermitian sparse matrix which requires diagonal elements to be divided by 2 before being passed
         push!(I,bIndex);
-        # push!(M,S2bb);
-        push!(Mpointers,appendSet!(S2bb,M));
-
-        # CSC formatting (turns out this is unnecessary)
-        # sortTwo!(I[Jpointers[bIndex]:end],M[Jpointers[bIndex]:end],1,length(I[Jpointers[bIndex]:end]));
+        push!(Mpointers,appendSet!(0.5*S2bb,M)); # see NOTE
 
     end;
 
     # CSC formatting
     Jpointers[end] = Int32(length(I)+1);
 
-    # S2::SparseMatrixCSC{Complex128,Int32} = SparseMatrixCSC{Complex128,Int32}(basis.dim, basis.dim, Jpointers, I, M);
-    # S2::sparseHermitian{Int32,Complex128} = sparseHermitian{Int32,Complex128}(basis.dim,basis.dim,Jpointers,I,M);
     S2::sparseHermitian{Int32,Complex128} = sparseHermitian{Int32,Complex128}(basis.dim,basis.dim,Jpointers,I,M,Mpointers);
 
     return S2;
@@ -118,7 +113,7 @@ end;
 function S2_mul_psi!(basis::SzkxkyBasis,s::sector,l::lattice,S2psi::Vector{Complex128},psi::Vector{Complex128})
 
     # clear output Vector
-    S2psi .= 0.0+0.0im;
+    S2psi .= 0;
 
     # lattice
     Lx::Int64 = l.Lx;
