@@ -33,11 +33,11 @@ function main(Lx::Int64,Ly::Int64,J1::Float64,J2::Float64,K::Float64,n1::Int64,m
     # number of eigenvalues desired
     numEigs::Int64 = 6;
     # a tolerance for error
-    tolerance::Float64 = 10.^(-5.);
+    tolerance::Float64 = 10.^(-6.);
     # ritzVec = true if you want the eigenvectors returned too
     ritzVec::Bool = true;
     # number of Krylov vectors in eigenvalue calculation
-    numKrylovVecs::Int64 = 20;
+    numKrylovVecs::Int64 = 30;
     # maximum number of iterations to converge eigenvalues
     maxIter::Int64 = 200;
 
@@ -50,7 +50,7 @@ function main(Lx::Int64,Ly::Int64,J1::Float64,J2::Float64,K::Float64,n1::Int64,m
     s::sector = sector(n1,kx,ky);
 
     # construct the basis
-    basis::SzkxkyBasis = SzkxkyBasis(l,s);
+    basis::SzkxkyBasis = SzkxkyBasis{UInt64}(l,s);
     println("Dimension of reduced Hilbert space is ",basis.dim,".");
 
     # couplings type to make passing J1,K easier
@@ -98,34 +98,35 @@ end;
 #-- specify parameters of the calculation
 
 # square lattice length
-const Lx = 4;
+const Lx = 6;
 const Ly = 4;
 # NN coupling
 const J1 = 1.0;
 # NNN coupling
-const J2 = 0.0;
+const J2 = 0.4;
 # plaquette coupling
-const K = 0.0;
+const K = 0.8;
 
 # choose Sz sector by specifying number of 1s in basis states
-const n1List = (convert(Int64,(Lx*Ly)/2)):convert(Int64,(Lx*Ly)/2);
+const n1List = (convert(Int64,(Lx*Ly)/2)-0):convert(Int64,(Lx*Ly)/2);
 # choose kx,ky by specifying mi such that mi is in 0:Li-1
-const mxList = 0:(Lx-1);
-const myList = 0:(Ly-1);
+# const mxList = 0:(Lx-1);
+# const myList = 0:(Ly-1);
+const mxpi = div(Lx,2); # mx corresponding to kx=pi
+const mypi = div(Ly,2); # my corresponding to kx=pi
+const mList = [(0,0),(mxpi,mypi),(0,mypi),(mxpi,0)]; # the most important sectors
 
 
 #-- execute main function for all parameter values and collect data
 data = DataFrame();
 
 for n1 in n1List
-    for mx in mxList
-        for my in myList
-            df = main(Lx,Ly,J1,J2,K,n1,mx,my);
-            data = vcat(data,df);
-        end;
+    for m in mList
+        df = main(Lx,Ly,J1,J2,K,n1,m[1],m[2]);
+        data = vcat(data,df);
     end;
 end;
 
 # write data
-dataFileName = "specData/testing_Sz=0_Lx=" * string(Lx) * "_Ly=" * string(Ly) * "_J1=" * string(J1) * "_J2=" * string(J2) * "_K=" * string(K) * ".csv";
-writetable(dataFileName, sort(data));
+dataFileName = "specData/Sz=0_kx=0,pi_ky=0,pi_Lx=" * string(Lx) * "_Ly=" * string(Ly) * "_J1=" * string(J1) * "_J2=" * string(J2) * "_K=" * string(K) * ".csv";
+writetable(dataFileName, sort!(data));

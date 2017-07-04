@@ -132,7 +132,7 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
                     push!(I,aRepIndex);
                     push!(Mpointers,appendSet!(Hsite,M));
                 elseif bIndex == aRepIndex
-                    Hbb += 0.5*J1+0.125*K*(sPw34-sPw1234+2*sPw1D2D);
+                    Hbb += (0.5*J1+0.125*K*(sPw34-sPw1234+2*sPw1D2D))*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
                 end;
             end;
 
@@ -151,7 +151,7 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
                     push!(I,aRepIndex);
                     push!(Mpointers,appendSet!(Hsite,M));
                 elseif bIndex == aRepIndex
-                    Hbb += 0.5*J1+0.125*K*(sPw24-sPw1234+2*sPw1L3L);
+                    Hbb += (0.5*J1+0.125*K*(sPw24-sPw1234+2*sPw1L3L))*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
                 end;
             end;
 
@@ -170,7 +170,7 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
                     push!(I,aRepIndex);
                     push!(Mpointers,appendSet!(Hsite,M));
                 elseif bIndex == aRepIndex
-                    Hbb += 0.5*J2-0.25*K*sPw23;
+                    Hbb += (0.5*J2-0.25*K*sPw23)*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
                 end;
             end;
 
@@ -189,7 +189,7 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
                     push!(I,aRepIndex);
                     push!(Mpointers,appendSet!(Hsite,M));
                 elseif bIndex == aRepIndex
-                    Hbb += 0.5*J2-0.25*K*sPw14;
+                    Hbb += (0.5*J2-0.25*K*sPw14)*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
                 end;
             end;
 
@@ -208,16 +208,17 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
                     push!(I,aRepIndex);
                     push!(Mpointers,appendSet!(Hsite,M));
                 elseif bIndex == aRepIndex
-                    Hbb += 0.125*K*(2-sPw12-sPw34-sPw13-sPw24+sPw14+sPw23)
+                    Hbb += (0.125*K*(2-sPw12-sPw34-sPw13-sPw24+sPw14+sPw23))*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
                 end;
             end;
 
         end;
 
-        # push diagonal matrix element to list of matrix elements
         # NOTE: the leading factor of 0.5 in each diagonal term is due to the Hermitian sparse matrix which requires diagonal elements to be divided by 2 before being passed
+        Hbb *= 0.5;
+        # push diagonal matrix element to list of matrix elements
         push!(I,bIndex);
-        push!(Mpointers,appendSet!(0.5*Hbb,M)); # see NOTE
+        push!(Mpointers,appendSet!(Hbb,M));
 
     end;
 
@@ -232,7 +233,7 @@ end;
 ## THE REST OF THE FILE IS FOR TESTING ##
 
 # # function for building the sparse Hamiltonian
-# function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice)
+# function constructSparseHam2(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice)
 #
 #     # lattice
 #     Lx::Int64 = l.Lx;
@@ -553,7 +554,6 @@ function constructDenseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice)
                 if aRepIndex != 0
                     # the matrix element
                     H[aRepIndex,bIndex] +=  (0.5*J1+0.125*K*(sPw34-sPw1234+2*sPw1D2D))*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
-
                 end;
             end;
 
@@ -568,7 +568,6 @@ function constructDenseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice)
                 if aRepIndex != 0
                     # the matrix element
                     H[aRepIndex,bIndex] += (0.5*J1+0.125*K*(sPw24-sPw1234+2*sPw1L3L))*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
-
                 end;
             end;
 
@@ -583,7 +582,6 @@ function constructDenseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice)
                 if aRepIndex != 0
                     # the matrix element
                    H[aRepIndex,bIndex] += (0.5*J2-0.25*K*sPw23)*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
-
                 end;
             end;
 
@@ -598,7 +596,6 @@ function constructDenseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice)
                 if aRepIndex != 0
                     # the matrix element
                     H[aRepIndex,bIndex] += (0.5*J2-0.25*K*sPw14)*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
-
                 end;
             end;
 
@@ -613,7 +610,6 @@ function constructDenseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice)
                 if aRepIndex != 0
                     # the matrix element
                     H[aRepIndex,bIndex] += 0.125*K*(2-sPw12-sPw34-sPw13-sPw24+sPw14+sPw23)*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb);
-
                 end;
             end;
 
