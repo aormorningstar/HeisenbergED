@@ -1,3 +1,5 @@
 plots/*
 specData/*
-.ipynb_checkpoints/*
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+testing/*
