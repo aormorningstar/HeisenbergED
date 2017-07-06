@@ -18,7 +18,7 @@ end;
 
 # toggle a bit
 function toggleBit{I<:Integer}(i::I,bit::Int64)
-    return xor(i , (1 << (bit-1)))::I;
+    return (i $ (1 << (bit-1)))::I;
 end;
 
 
@@ -33,7 +33,7 @@ function swapBits{I<:Integer}(i::I,bit1::Int64,bit2::Int64)
     if readBit(i,bit1) == readBit(i,bit2)
         return i::I;
     else
-        return xor(i , ( (1<<(bit1-1)) | (1<<(bit2-1)) ))::I;
+        return (i $ ( (1<<(bit1-1)) | (1<<(bit2-1)) ))::I;
     end;
 end;
 
@@ -59,7 +59,7 @@ end;
 function XiXj{I<:Integer}(b::I,i::Int64,j::Int64)
     # b - integer rep of state
     # i,j - sites of spin flips
-    return xor(b , ( (1<<(i-1)) | (1<<(j-1)) ))::I;
+    return (b $ ( (1<<(i-1)) | (1<<(j-1)) ))::I;
 end;
 
 
@@ -67,7 +67,7 @@ end;
 function XiXjXkXl{I<:Integer}(b::I,i::Int64,j::Int64,k::Int64,l::Int64)
     # b - integer rep of state
     # i,j,k,l - sites of spin flips
-    return xor(b , ( (1<<(i-1)) | (1<<(j-1)) | (1<<(k-1)) | (1<<(l-1)) ))::I;
+    return (b $ ( (1<<(i-1)) | (1<<(j-1)) | (1<<(k-1)) | (1<<(l-1)) ))::I;
 end;
 
 

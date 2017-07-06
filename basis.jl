@@ -62,7 +62,7 @@ immutable SzkxkyBasis{I<:Integer}
     dim::Int64;
 
     # constructor
-    SzkxkyBasis{I}(l::lattice,s::sector) where {I} =
+    SzkxkyBasis(l::lattice,s::sector) =
     begin
         # initialize list of reps of momentum basis elements
         bList::Array{I,1} = Array{I,1}();
