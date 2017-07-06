@@ -3,7 +3,10 @@
 # Alan Morningstar
 # May 2017
 
+
+using ArgParse;
 using DataFrames;
+
 
 include("utils.jl");
 include("lattice.jl");
@@ -14,7 +17,7 @@ include("sparseS2.jl");
 
 
 # main function
-function main(Lx::Int64,Ly::Int64,J1::Float64,J2::Float64,K::Float64,n1::Int64,mx::Int64,my::Int64)
+function main(Lx::Int64,Ly::Int64,J1::Float64,J2::Float64,K::Float64,Sz::Int64,mx::Int64,my::Int64)
     # number of lattice sites
     N::Int64 = Lx*Ly;
     # momentum
@@ -26,7 +29,7 @@ function main(Lx::Int64,Ly::Int64,J1::Float64,J2::Float64,K::Float64,n1::Int64,m
     println("J1 = ",J1);
     println("J2 = ",J2);
     println("K = ",K);
-    println("n1 = ",n1);
+    println("Sz = ",Sz);
     println("mx = ",mx);
     println("my = ",my);
 
@@ -47,7 +50,7 @@ function main(Lx::Int64,Ly::Int64,J1::Float64,J2::Float64,K::Float64,n1::Int64,m
     l::lattice = lattice(Lx,Ly,neighborVectors);
 
     # specify symmetry sector
-    s::sector = sector(n1,kx,ky);
+    s::sector = sector(Sz,kx,ky);
 
     # construct the basis
     basis::SzkxkyBasis = SzkxkyBasis{UInt64}(l,s);
@@ -70,7 +73,7 @@ function main(Lx::Int64,Ly::Int64,J1::Float64,J2::Float64,K::Float64,n1::Int64,m
     # energies
     EData::Array{Float64,1} = real(eigsResult[1]);
     # Sz values
-    SzData::Array{Float64,1} = fill((N-2*n1)/2,numEigs);
+    SzData::Array{Int64,1} = fill(Sz,numEigs);
     # mx values
     mxData::Array{Int64,1} = fill(mx,numEigs);
     # my values
@@ -89,44 +92,72 @@ function main(Lx::Int64,Ly::Int64,J1::Float64,J2::Float64,K::Float64,n1::Int64,m
     # create DataFrame
     df::DataFrame = DataFrame(E=EData,Ssqrd=S2Data,Sz=SzData,mx=mxData,my=myData);
     println(df);
+    # sort by energy
+    sort!(df);
 
     return df;
 
 end;
 
 
-#-- specify parameters of the calculation
+#-- parse command line arguments
+s = ArgParseSettings();
 
-# square lattice length
-const Lx = 6;
-const Ly = 4;
-# NN coupling
-const J1 = 1.0;
-# NNN coupling
-const J2 = 0.4;
-# plaquette coupling
-const K = 0.8;
+@add_arg_table s begin
 
-# choose Sz sector by specifying number of 1s in basis states
-const n1List = (convert(Int64,(Lx*Ly)/2)-0):convert(Int64,(Lx*Ly)/2);
-# choose kx,ky by specifying mi such that mi is in 0:Li-1
-# const mxList = 0:(Lx-1);
-# const myList = 0:(Ly-1);
-const mxpi = div(Lx,2); # mx corresponding to kx=pi
-const mypi = div(Ly,2); # my corresponding to kx=pi
-const mList = [(0,0),(mxpi,mypi),(0,mypi),(mxpi,0)]; # the most important sectors
+    "--Lx"
+        help = "length of lattice in x direction";
+        arg_type = Int64;
+        default = 4;
+    "--Ly"
+        help = "length of lattice in y direction";
+        arg_type = Int64;
+        default = 4;
+    "--J1"
+        help = "nearest neighbor coupling";
+        arg_type = Float64;
+        default = 1.0;
+    "--J2"
+        help = "next nearest neighbor coupling";
+        arg_type = Float64;
+        default = 0.0;
+    "--K"
+        help = "ring exchange coupling";
+        arg_type = Float64;
+        default = 0.0;
+    "--Sz"
+        help = "total z spin";
+        arg_type = Int64;
+        default = 0;
+    "--mx"
+        help = "x momentum mx such that kx = 2 pi mx / Lx";
+        arg_type = Int64;
+          default = 0;
 
+    "--my"
+        help = "y momentum my such that ky = 2 pi my / Ly";
+        arg_type = Int64;
+        default = 0;
 
-#-- execute main function for all parameter values and collect data
-data = DataFrame();
-
-for n1 in n1List
-    for m in mList
-        df = main(Lx,Ly,J1,J2,K,n1,m[1],m[2]);
-        data = vcat(data,df);
-    end;
 end;
 
-# write data
-dataFileName = "specData/Sz=0_kx=0,pi_ky=0,pi_Lx=" * string(Lx) * "_Ly=" * string(Ly) * "_J1=" * string(J1) * "_J2=" * string(J2) * "_K=" * string(K) * ".csv";
-writetable(dataFileName, sort!(data));
+const argsDict = parse_args(s);
+
+
+#-- execute main function
+data = main(
+            argsDict["Lx"],
+            argsDict["Ly"],
+            argsDict["J1"],
+            argsDict["J2"],
+            argsDict["K"],
+            argsDict["Sz"],
+            argsDict["mx"],
+            argsDict["my"]
+            );
+
+
+#-- save data
+dataFileName = "testing/Lx=" * string(argsDict["Lx"]) * "_Ly=" * string(argsDict["Ly"]) * "_J1=" * string(argsDict["J1"]) * "_J2=" * string(argsDict["J2"]) * "_K=" * string(argsDict["K"]) * "_Sz=" * string(argsDict["Sz"]) * "_mx=" * string(argsDict["mx"]) * "_my=" * string(argsDict["my"]) * ".csv";
+
+writetable(dataFileName, data);

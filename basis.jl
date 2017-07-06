@@ -6,8 +6,8 @@
 
 # container for symmetry sector
 immutable sector
-    # number of 1 bits in the bit rep. of spin states in this sector
-    n1::Int64;
+    # z spin
+    Sz::Int64;
     # momentum
     kx::Float64;
     ky::Float64;
@@ -71,7 +71,8 @@ immutable SzkxkyBasis{I<:Integer}
 
         # run up the binary odometer of Sz states
         # start with first n1 bits in state 1(down)
-        b::I = convert(I,2^s.n1-1);
+        n1::Int64 = div(l.N,2)-s.Sz;
+        b::I = convert(I,2^n1-1);
 
         # allocate memory
         n::Float64 = 0.0;
