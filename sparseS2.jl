@@ -109,7 +109,7 @@ function constructSparseS2(basis::SzkxkyBasis,s::sector,l::lattice)
 end;
 
 
-# function for in place multiplication by the S^2 operator
+# function for in place multiplication by the S^2 operator without storing it
 function S2_mul_psi!(basis::SzkxkyBasis,s::sector,l::lattice,S2psi::Vector{Complex128},psi::Vector{Complex128})
 
     # clear output Vector

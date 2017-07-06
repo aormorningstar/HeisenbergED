@@ -81,15 +81,15 @@ function simplePower{I<:Integer}(i::I)
 end;
 
 
-# function for sorting two arrays in place based on the first of the arrays
-function sortTwo!{TI,TM}(I::Array{TI,1},M::Array{TM,1},low::Int64,high::Int64)
+# function for sorting multiple lists in place based on the values of another list which is also sorted
+function sortTwo!{TI<:Real}(low::Int64,high::Int64,I::Vector{TI},M...)
     if low < high
-        p::Int64 = partition!(I,M,low,high);
-        sortTwo!(I,M,low,p);
-        sortTwo!(I,M,p+1,high);
+        p::Int64 = partition!(low,high,I,M...);
+        sortTwo!(low,p,I,M...);
+        sortTwo!(p+1,high,I,M...);
     end;
 end;
-function partition!{TI,TM}(I::Array{TI,1},M::Array{TM,1},low::Int64,high::Int64)
+function partition!{TI<:Real}(low::Int64,high::Int64,I::Vector{TI},M...)
     piv::TI = I[low];
     i::Int64 = low;
     j::Int64 = high;
@@ -104,7 +104,10 @@ function partition!{TI,TM}(I::Array{TI,1},M::Array{TM,1},low::Int64,high::Int64)
         if i >= j
           return j;
         end;
-        I[i],I[j],M[i],M[j] = I[j],I[i],M[j],M[i];
+        I[i],I[j] = I[j],I[i];
+        for m in M
+            m[i],m[j] = m[j],m[i]
+        end;
         i += 1;
         j -= 1;
     end;
