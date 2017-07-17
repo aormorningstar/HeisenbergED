@@ -15,7 +15,7 @@ immutable sparseHermitian{TI<:Integer,TM<:Number}
     # number of columns in the matrix
     nCols::Int64;
     # indices of the first non-zero value of each column
-    colPntrs::Vector{TI};
+    colPntrs::Vector{Int64};
     # row indices of non-zero elements
     rowIndcs::Vector{TI};
     # non-zero matrix element values
@@ -30,10 +30,10 @@ immutable sparseHermitian{TI<:Integer,TM<:Number}
     # constructors
 
     # not a sparse matrix of pointers to matrix elements
-    sparseHermitian{TI,TM}(nRows::Int64, nCols::Int64, colPntrs::Vector{TI}, rowIndcs::Vector{TI}, nzVals::Vector{TM}) = new(nRows::Int64, nCols::Int64, colPntrs::Vector{TI}, rowIndcs::Vector{TI}, nzVals::Vector{TM},Vector{TI}(),false);
+    sparseHermitian{TI,TM}(nRows::Int64, nCols::Int64, colPntrs::Vector{Int64}, rowIndcs::Vector{TI}, nzVals::Vector{TM}) = new(nRows::Int64, nCols::Int64, colPntrs::Vector{Int64}, rowIndcs::Vector{TI}, nzVals::Vector{TM},Vector{TI}(),false);
 
     # a sparse matrix of pointers to matrix elements
-    sparseHermitian{TI,TM}(nRows::Int64, nCols::Int64, colPntrs::Vector{TI}, rowIndcs::Vector{TI}, nzVals::Vector{TM}, nzPntrs::Vector{TI}) = new(nRows::Int64, nCols::Int64, colPntrs::Vector{TI}, rowIndcs::Vector{TI}, nzVals::Vector{TM}, nzPntrs::Vector{TI}, true);
+    sparseHermitian{TI,TM}(nRows::Int64, nCols::Int64, colPntrs::Vector{Int64}, rowIndcs::Vector{TI}, nzVals::Vector{TM}, nzPntrs::Vector{TI}) = new(nRows::Int64, nCols::Int64, colPntrs::Vector{Int64}, rowIndcs::Vector{TI}, nzVals::Vector{TM}, nzPntrs::Vector{TI}, true);
 
 end;
 

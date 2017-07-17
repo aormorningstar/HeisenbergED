@@ -38,7 +38,7 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
     bType::Type = eltype(basis);
 
     # store location and value of non-zero matrix elements in CSC format
-    Jpointers::Vector{Int32} = Vector{Int32}(basis.dim+1);
+    Jpointers::Vector{Int64} = Vector{Int64}(basis.dim+1);
     I::Vector{Int32} = Int32[];
     M::Vector{Complex128} = Complex128[];
     Mpointers::Vector{Int32} = Int32[];
@@ -63,7 +63,7 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
     # loop over basis
     for bIndex::Int64 in 1:basis.dim
         # CSC formatting
-        Jpointers[bIndex] = Int32(length(I)+1);
+        Jpointers[bIndex] = length(I)+1;
 
         # spin states of basis
         b = basis.b[bIndex]; # integer rep.
@@ -222,7 +222,7 @@ function constructSparseHam(basis::SzkxkyBasis,c::couplings,s::sector,l::lattice
     end;
 
     # CSC formatting
-    Jpointers[end] = Int32(length(I)+1);
+    Jpointers[end] = length(I)+1;
 
     H::sparseHermitian{Int32,Complex128} = sparseHermitian{Int32,Complex128}(basis.dim,basis.dim,Jpointers,I,M,Mpointers);
     return H;

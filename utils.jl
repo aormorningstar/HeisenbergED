@@ -115,10 +115,10 @@ end;
 
 
 # find the index of the first instance of an element in a set (vector), if it's not in the set then append the element and return it's index
-function appendSet!{T}(elem::T,set::Vector{T})
+function appendSet!{T<:Number}(elem::T,set::Vector{T})
 
     for (index::Int64,item::T) in enumerate(set)
-        if elem == item
+        if abs(elem - item) < 0.0000000001
             return index::Int64;
         end;
     end;

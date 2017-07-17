@@ -36,11 +36,11 @@ function main(Lx::Int64,Ly::Int64,J1::Float64,J2::Float64,K::Float64,Sz::Int64,m
     # number of eigenvalues desired
     numEigs::Int64 = 6;
     # a tolerance for error
-    tolerance::Float64 = 10.^(-6.);
+    tolerance::Float64 = 10.^(-8.);
     # ritzVec = true if you want the eigenvectors returned too
     ritzVec::Bool = true;
     # number of Krylov vectors in eigenvalue calculation
-    numKrylovVecs::Int64 = 30;
+    numKrylovVecs::Int64 = 40;
     # maximum number of iterations to converge eigenvalues
     maxIter::Int64 = 200;
 
@@ -61,12 +61,15 @@ function main(Lx::Int64,Ly::Int64,J1::Float64,J2::Float64,K::Float64,Sz::Int64,m
 
     # build the sparse Hamiltonian
     println("Building the Hamiltonian.");
-    H::sparseHermitian{Int32,Complex128} = constructSparseHam(basis,c,s,l);
+    H = constructSparseHam(basis,c,s,l);
 
     # compute eigenvalues
     #:LM stands for largest magnitude, :SR for smallest real part
     println("Computing eigenvalues and eigenvectors.");
     eigsResult = eigs(H; nev=numEigs,ncv=numKrylovVecs,maxiter=maxIter, which=:SR, tol=tolerance, ritzvec=ritzVec);
+
+    # clear Hamiltonian memory
+    H = 0;
 
     # compile data
     println("Compiling data.");
@@ -88,6 +91,9 @@ function main(Lx::Int64,Ly::Int64,J1::Float64,J2::Float64,K::Float64,Sz::Int64,m
         S2_mul_psi!(basis,s,l,S2psi,psi);
         S2Data[i] = round(Int64,real(dot(psi,S2psi))[1])
     end;
+
+    # clear eigsResult memory
+    eigsResult = 0;
 
     # create DataFrame
     df::DataFrame = DataFrame(E=EData,Ssqrd=S2Data,Sz=SzData,mx=mxData,my=myData);

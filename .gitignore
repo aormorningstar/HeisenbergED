@@ -3,5 +3,5 @@ specData/*
 .ipynb_checkpoints
 */.ipynb_checkpoints/*
 testing/*
-*.sh
-*.sh~
+*.sh*
+*.out*
