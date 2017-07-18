@@ -8,54 +8,54 @@
 function xyIndex(site::Int64,Lx::Int64,Ly::Int64)
     # site - number of the site for which x,y indices are computed
 
-    y::Int64,x::Int64 = divrem(site-1,Lx);
+    y::Int64,x::Int64 = divrem(site-1,Lx)
 
-    return x,y;
-end;
+    return x,y
+end
 
 
 # convert xy site indexing to single integer index
 function siteIndex(xy::Tuple{Int64,Int64},Lx::Int64,Ly::Int64)
     # xy - tuple containing x,y indexing of a site
 
-    x::Int64 = xy[1];
-    y::Int64 = xy[2];
+    x::Int64 = xy[1]
+    y::Int64 = xy[2]
 
     # move xy into primary lattice cell
     while x > (Lx-1)
-        x -= Lx;
-    end;
+        x -= Lx
+    end
     while x < 0
-        x += Lx;
-    end;
+        x += Lx
+    end
     while y > (Ly-1)
-        y -= Ly;
-    end;
+        y -= Ly
+    end
     while y < 0
-        y += Ly;
-    end;
+        y += Ly
+    end
 
     # map to integer index
-    site::Int64 = y*Lx + x + 1;
+    site::Int64 = y*Lx + x + 1
 
-    return site;
-end;
+    return site
+end
 
 
 # find indices of neighbors specified by a translation vectors T
 function neighbors(site::Int64,T::Array{Tuple{Int64,Int64},1},Lx::Int64,Ly::Int64)
     # use xy indexing just to compute neighbors
-    x::Int64,y::Int64 = xyIndex(site,Lx,Ly);
+    x::Int64,y::Int64 = xyIndex(site,Lx,Ly)
 
     # neighbor in xy indexing
-    neighborxy::Array{Tuple{Int64,Int64},1} = [(x+t[1],y+t[2]) for t in T];
+    neighborxy::Array{Tuple{Int64,Int64},1} = [(x+t[1],y+t[2]) for t in T]
 
     # back to single integer indexing
-    neighborIndex::Array{Int64,1} = [siteIndex(nxy,Lx,Ly) for nxy in neighborxy];
+    neighborIndex::Array{Int64,1} = [siteIndex(nxy,Lx,Ly) for nxy in neighborxy]
 
     # return neighbor index
-    return neighborIndex;
-end;
+    return neighborIndex
+end
 
 
 #-- define the lattice
@@ -73,19 +73,22 @@ end;
 # container for lattice properties
 immutable lattice
     # size of lattice, number of sites
-    Lx::Int64;
-    Ly::Int64;
-    N::Int64;
-    nbrs::Array{Array{Int64,1},1};
-    TxMask1::UInt64;
-    TxMask2::UInt64;
-    TyMask1::UInt64;
-    TyMask2::UInt64;
-    LxMinus1::Int64;
-    NMinusLx::Int64;
+    Lx::Int64
+    Ly::Int64
+    N::Int64
+    # neighbors of each site detailed in diagram above
+    nbrs::Array{Array{Int64,1},1}
+    # useful constants for translation and inversion operators
+    TxMask1::UInt64
+    TxMask2::UInt64
+    TyMask1::UInt64
+    TyMask2::UInt64
+    LxMinus1::Int64
+    NMinusLx::Int64
+    ZMask::UInt64
 
     function lattice(Lx::Int64,Ly::Int64,neighborVectors::Array{Tuple{Int64,Int64},1})
-        neighborsList = [neighbors(site,neighborVectors,Lx,Ly) for site in 1:Lx*Ly];
+        neighborsList = [neighbors(site,neighborVectors,Lx,Ly) for site in 1:Lx*Ly]
 
         # rough code, needs cleanup
         # ------------------------------------------
@@ -102,32 +105,38 @@ immutable lattice
         TyMask2 = (UInt64(1)<< (Lx * (Ly-1))) - 1
         # -------------------------------------------
 
-        new(Lx,Ly,Lx*Ly,neighborsList,TxMask1,TxMask2,TyMask1,TyMask2,Lx-1,Lx*(Ly-1));
-    end;
-end;
+        new(Lx,Ly,Lx*Ly,neighborsList,TxMask1,TxMask2,TyMask1,TyMask2,Lx-1,Lx*(Ly-1),UInt64(2^(Lx*Ly)-1))
+    end
+end
 
 
 # x translation operator
 function Tx{I<:Integer}(b::I,l::lattice)
-    return ((b & l.TxMask1) >> (l.LxMinus1) | ((b & l.TxMask2) << 1));
-end;
+    return ((b & l.TxMask1) >> (l.LxMinus1) | ((b & l.TxMask2) << 1))
+end
 
 
 # y translation operator
 function Ty{I<:Integer}(b::I,l::lattice)
-    return ((b & l.TyMask1) >> (l.NMinusLx) | ((b & l.TyMask2) << l.Lx));
-end;
+    return ((b & l.TyMask1) >> (l.NMinusLx) | ((b & l.TyMask2) << l.Lx))
+end
+
+
+# spin flip operator
+function Z{I<:Integer}(b::I,l::lattice)
+    return ( l.ZMask $ b )
+end
 
 
 # find related representative state and what translation relates the two states
 function representative{I<:Integer}(b::I,l::lattice)
     # rep. state
-    rep::I = b;
+    rep::I = b
     # translated state
-    Tb::I = b;
+    Tb::I = b
     # translations to get to rep. state
-    lx::Int64 = 0;
-    ly::Int64 = 0;
+    lx::Int64 = 0
+    ly::Int64 = 0
 
     # perform all translations
     for y::Int64 in 0:l.Ly-1
@@ -135,15 +144,15 @@ function representative{I<:Integer}(b::I,l::lattice)
 
             if Tb < rep
                 # then this is a better representative
-                rep = Tb;
-                lx = x;
-                ly = y;
-            end;
+                rep = Tb
+                lx = x
+                ly = y
+            end
 
-            Tb = Tx(Tb,l);
-        end;
-        Tb = Ty(Tb,l);
-    end;
+            Tb = Tx(Tb,l)
+        end
+        Tb = Ty(Tb,l)
+    end
 
-    return rep::I,lx::Int64,ly::Int64;
-end;
+    return rep::I,lx::Int64,ly::Int64
+end
