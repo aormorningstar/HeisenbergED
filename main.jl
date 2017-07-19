@@ -171,6 +171,6 @@ data = main(
 
 
 #-- save data
-dataFileName = "testing/Lx=" * string(argsDict["Lx"]) * "_Ly=" * string(argsDict["Ly"]) * "_J1=" * string(argsDict["J1"]) * "_J2=" * string(argsDict["J2"]) * "_K=" * string(argsDict["K"]) * "_Sz=" * string(argsDict["Sz"]) * "_mx=" * string(argsDict["mx"]) * "_my=" * string(argsDict["my"]) * "_z=" * string(argsDict["z"]) * ".csv"
+dataFileName = "specData/Lx=" * string(argsDict["Lx"]) * "_Ly=" * string(argsDict["Ly"]) * "_J1=" * string(argsDict["J1"]) * "_J2=" * string(argsDict["J2"]) * "_K=" * string(argsDict["K"]) * "_Sz=" * string(argsDict["Sz"]) * "_mx=" * string(argsDict["mx"]) * "_my=" * string(argsDict["my"]) * "_z=" * string(argsDict["z"]) * ".csv"
 
 writetable(dataFileName, data)
