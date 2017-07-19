@@ -17,7 +17,7 @@ include("sparseS2.jl")
 
 
 # main function
-function main(Lx::Int64,Ly::Int64,J1::Float64,J2::Float64,K::Float64,Sz::Int64,mx::Int64,my::Int64)
+function main(Lx::Int64,Ly::Int64,J1::Float64,J2::Float64,K::Float64,Sz::Int64,mx::Int64,my::Int64,z::Int64,verbose::Bool)
     # number of lattice sites
     N = Lx*Ly
     # momentum
@@ -25,16 +25,20 @@ function main(Lx::Int64,Ly::Int64,J1::Float64,J2::Float64,K::Float64,Sz::Int64,m
     ky = 2.0*pi*my/Ly
 
     # print details
-    println("N = ",N)
-    println("J1 = ",J1)
-    println("J2 = ",J2)
-    println("K = ",K)
-    println("Sz = ",Sz)
-    println("mx = ",mx)
-    println("my = ",my)
+    verbose ?
+        begin
+            println("N = ",N)
+            println("J1 = ",J1)
+            println("J2 = ",J2)
+            println("K = ",K)
+            println("Sz = ",Sz)
+            println("mx = ",mx)
+            println("my = ",my)
+            println("z = ",z)
+        end : nothing
 
     # number of eigenvalues desired
-    numEigs = 6
+    numEigs = 4
     # a tolerance for error
     tolerance = 10.^(-8.)
     # ritzVec = true if you want the eigenvectors returned too
@@ -50,29 +54,29 @@ function main(Lx::Int64,Ly::Int64,J1::Float64,J2::Float64,K::Float64,Sz::Int64,m
     l = lattice(Lx,Ly,neighborVectors)
 
     # specify symmetry sector
-    s = sector(Sz,kx,ky)
+    s = sector(Sz,kx,ky,z)
 
     # construct the basis
-    basis = SzkxkyBasis{UInt64}(l,s)
-    println("Dimension of reduced Hilbert space is ",basis.dim,".")
+    basis = reducedBasis{UInt64}(l,s)
+    verbose ? println("Dimension of reduced Hilbert space is ",basis.dim,".") : nothing
 
-    # couplings type to make passing J1,K easier
+    # couplings type to make passing J1,J2,K easier
     c = couplings(J1,J2,K)
 
     # build the sparse Hamiltonian
-    println("Building the Hamiltonian.")
+    verbose ? println("Building the Hamiltonian.") : nothing
     H = constructSparseHam(basis,c,s,l)
 
     # compute eigenvalues
     #:LM stands for largest magnitude, :SR for smallest real part
-    println("Computing eigenvalues and eigenvectors.")
+    verbose ? println("Computing eigenvalues and eigenvectors.") : nothing
     eigsResult = eigs(H; nev=numEigs,ncv=numKrylovVecs,maxiter=maxIter, which=:SR, tol=tolerance, ritzvec=ritzVec)
 
     # clear Hamiltonian memory
-    H = 0
+    H = nothing
 
     # compile data
-    println("Compiling data.")
+    verbose ? println("Compiling data.") : nothing
     # energies
     EData = real(eigsResult[1])
     # Sz values
@@ -81,23 +85,17 @@ function main(Lx::Int64,Ly::Int64,J1::Float64,J2::Float64,K::Float64,Sz::Int64,m
     mxData = fill(mx,numEigs)
     # my values
     myData = fill(my,numEigs)
+    # z values
+    zData = fill(z,numEigs);
     # S(S+1) values
-    S2Data = zeros(Int64,numEigs)
-    # allocate memory before loop
-    psi = Array{Complex128,1}(basis.dim)
-    S2psi = Array{Complex128,1}(basis.dim)
-    for i in 1:numEigs
-        psi = eigsResult[2][:,i]
-        S2_mul_psi!(basis,s,l,S2psi,psi)
-        S2Data[i] = round(Int64,real(dot(psi,S2psi))[1])
-    end
+    S2Data = round(Int64,real(S2expectations(basis,s,l,eigsResult[2])));
 
     # clear eigsResult memory
-    eigsResult = 0
+    eigsResult = nothing
 
     # create DataFrame
-    df = DataFrame(E=EData,Ssqrd=S2Data,Sz=SzData,mx=mxData,my=myData)
-    println(df)
+    df = DataFrame(E=EData,Ssqrd=S2Data,Sz=SzData,mx=mxData,my=myData,z=zData)
+    verbose ? println(df) : nothing
     # sort by energy
     sort!(df)
 
@@ -139,11 +137,18 @@ s = ArgParseSettings()
         help = "x momentum mx such that kx = 2 pi mx / Lx"
         arg_type = Int64
           default = 0
-
     "--my"
         help = "y momentum my such that ky = 2 pi my / Ly"
         arg_type = Int64
         default = 0
+    "--z"
+        help = "z = +-1 spin-inversion quantum number"
+        arg_type = Int64
+        default = 1
+    "--verbose"
+        help = "print info during computation? true or false"
+        arg_type = Bool
+        default = true
 
 end
 
@@ -159,11 +164,13 @@ data = main(
             argsDict["K"],
             argsDict["Sz"],
             argsDict["mx"],
-            argsDict["my"]
+            argsDict["my"],
+            argsDict["z"],
+            argsDict["verbose"]
             )
 
 
 #-- save data
-dataFileName = "testing/Lx=" * string(argsDict["Lx"]) * "_Ly=" * string(argsDict["Ly"]) * "_J1=" * string(argsDict["J1"]) * "_J2=" * string(argsDict["J2"]) * "_K=" * string(argsDict["K"]) * "_Sz=" * string(argsDict["Sz"]) * "_mx=" * string(argsDict["mx"]) * "_my=" * string(argsDict["my"]) * ".csv"
+dataFileName = "testing/Lx=" * string(argsDict["Lx"]) * "_Ly=" * string(argsDict["Ly"]) * "_J1=" * string(argsDict["J1"]) * "_J2=" * string(argsDict["J2"]) * "_K=" * string(argsDict["K"]) * "_Sz=" * string(argsDict["Sz"]) * "_mx=" * string(argsDict["mx"]) * "_my=" * string(argsDict["my"]) * "_z=" * string(argsDict["z"]) * ".csv"
 
 writetable(dataFileName, data)
