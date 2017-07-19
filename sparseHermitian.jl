@@ -4,7 +4,7 @@
 # June 2017
 
 
-# type
+#-- type
 
 immutable sparseHermitian{TI<:Integer,TM<:Number}
 
@@ -38,7 +38,7 @@ immutable sparseHermitian{TI<:Integer,TM<:Number}
 end
 
 
-# methods
+#-- methods
 
 # in place matrix*vector multiplication
 function Base.A_mul_B!(y::AbstractVector,M::sparseHermitian,x::AbstractVector)
@@ -46,7 +46,7 @@ function Base.A_mul_B!(y::AbstractVector,M::sparseHermitian,x::AbstractVector)
     # NOTE: this assumes the sparse Hermitian matrix has been built properly, with diagonal matrix elements divided by 2, and only the upper triangle of the off-diagonal elements included
 
     # clear output vector
-    y .= 0
+    y .= 0.0
 
     # fill output vector
     if !M.sparsePntrs

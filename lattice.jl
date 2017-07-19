@@ -6,17 +6,16 @@
 
 # convert single integer site index to xy indexing
 function xyIndex(site::Int64,Lx::Int64,Ly::Int64)
-    # site - number of the site for which x,y indices are computed
 
     y::Int64,x::Int64 = divrem(site-1,Lx)
 
     return x,y
+
 end
 
 
 # convert xy site indexing to single integer index
 function siteIndex(xy::Tuple{Int64,Int64},Lx::Int64,Ly::Int64)
-    # xy - tuple containing x,y indexing of a site
 
     x::Int64 = xy[1]
     y::Int64 = xy[2]
@@ -39,11 +38,13 @@ function siteIndex(xy::Tuple{Int64,Int64},Lx::Int64,Ly::Int64)
     site::Int64 = y*Lx + x + 1
 
     return site
+
 end
 
 
 # find indices of neighbors specified by a translation vectors T
 function neighbors(site::Int64,T::Array{Tuple{Int64,Int64},1},Lx::Int64,Ly::Int64)
+
     # use xy indexing just to compute neighbors
     x::Int64,y::Int64 = xyIndex(site,Lx,Ly)
 
@@ -55,6 +56,7 @@ function neighbors(site::Int64,T::Array{Tuple{Int64,Int64},1},Lx::Int64,Ly::Int6
 
     # return neighbor index
     return neighborIndex
+
 end
 
 
@@ -72,12 +74,15 @@ end
 
 # container for lattice properties
 immutable lattice
+
     # size of lattice, number of sites
     Lx::Int64
     Ly::Int64
     N::Int64
+
     # neighbors of each site detailed in diagram above
     nbrs::Array{Array{Int64,1},1}
+
     # useful constants for translation and inversion operators
     TxMask1::UInt64
     TxMask2::UInt64
@@ -88,6 +93,7 @@ immutable lattice
     ZMask::UInt64
 
     function lattice(Lx::Int64,Ly::Int64,neighborVectors::Array{Tuple{Int64,Int64},1})
+
         neighborsList = [neighbors(site,neighborVectors,Lx,Ly) for site in 1:Lx*Ly]
 
         # rough code, needs cleanup
@@ -106,7 +112,9 @@ immutable lattice
         # -------------------------------------------
 
         new(Lx,Ly,Lx*Ly,neighborsList,TxMask1,TxMask2,TyMask1,TyMask2,Lx-1,Lx*(Ly-1),UInt64(2^(Lx*Ly)-1))
+
     end
+
 end
 
 
@@ -130,15 +138,19 @@ end
 
 # find related representative state and what translation relates the two states
 function representative{I<:Integer}(b::I,l::lattice)
+
     # rep. state
     rep::I = b
-    # translated state
+    # transformed states
     Tb::I = b
+    ZTb::I = Z(b,l)
     # translations to get to rep. state
     lx::Int64 = 0
     ly::Int64 = 0
+    # inversion to get to rep. state
+    g::Int64 = 0;
 
-    # perform all translations
+    # perform all transformations
     for y::Int64 in 0:l.Ly-1
         for x::Int64 in 0:l.Lx-1
 
@@ -147,12 +159,29 @@ function representative{I<:Integer}(b::I,l::lattice)
                 rep = Tb
                 lx = x
                 ly = y
+                g = 0
             end
 
+            # now invert the spins
+            ZTb = Z(Tb,l)
+
+            if ZTb < rep
+                # then this is a better representative
+                rep = ZTb
+                lx = x
+                ly = y
+                g = 1
+            end
+
+
             Tb = Tx(Tb,l)
+
         end
+
         Tb = Ty(Tb,l)
+
     end
 
-    return rep::I,lx::Int64,ly::Int64
+    return rep::I,lx::Int64,ly::Int64,g::Int64
+
 end

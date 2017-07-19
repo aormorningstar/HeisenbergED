@@ -6,11 +6,15 @@
 
 # container for symmetry sector
 immutable sector
+
     # z spin
     Sz::Int64
     # momentum
     kx::Float64
     ky::Float64
+    # spin inversion quantum number
+    z::Int64
+
 end
 
 
@@ -19,16 +23,18 @@ function normConstant{I<:Integer}(b::I,l::lattice,s::sector)
 
     # sum of phases
     F::Complex128 = 0.0+0.0im
-    # currrent translated state
+    # currrent transformed states
     Tb::I = b
-    # set of translated states in integer rep.
-    Tbs::Array{I,1} = Array{I}(l.N)
+    ZTb::I = Z(b,l)
+    # set of transformed states in integer rep.
+    Tbs::Vector{I} = Vector{I}()
 
-    # perform all translations
+    # perform all transformations
     for y::Int64 in 0:l.Ly-1
         for x::Int64 in 0:l.Lx-1
+
             # add to set of translated states
-            Tbs[y*l.Lx+x+1] = Tb
+            appendSet!(Tb,Tbs)
 
             if Tb == b
                 # add to sum of phases
@@ -37,23 +43,38 @@ function normConstant{I<:Integer}(b::I,l::lattice,s::sector)
                 return 0.0
             end
 
+            # spin-invert the state
+            ZTb = Z(Tb,l)
+
+            # add inverted state to set of states
+            appendSet!(ZTb,Tbs)
+
+            if ZTb == b
+                # add to sum of phases
+                F += s.z*exp(-1.0im*(s.kx*x+s.ky*y))
+            elseif ZTb < b
+                return 0.0
+            end
+
+            # translate state in x direction
             Tb = Tx(Tb,l)
 
         end
 
+        # translate state in y direction
         Tb = Ty(Tb,l)
 
     end
 
     # compute and return normalization constant
-    Na::Float64 = abs2(F)*numUnique!(Tbs)
+    return abs2(F)*length(Tbs)
 
-    return Na
 end
 
 
 # the basis
-immutable SzkxkyBasis{I<:Integer}
+immutable reducedBasis{I<:Integer}
+
     # list of representatives of momentum basis states in integer representation
     b::Array{I,1}
     # list of corresponding normalization constants
@@ -62,7 +83,7 @@ immutable SzkxkyBasis{I<:Integer}
     dim::Int64
 
     # constructor
-    SzkxkyBasis(l::lattice,s::sector) =
+    reducedBasis(l::lattice,s::sector) =
     begin
         # initialize list of reps of momentum basis elements
         bList::Array{I,1} = Array{I,1}()
@@ -84,7 +105,7 @@ immutable SzkxkyBasis{I<:Integer}
             n = normConstant(b,l,s)
 
             # if valid rep state, add info to basis
-            if n > 0.00001
+            if n > 0.000001
                 push!(bList,b)
                 push!(nList,n)
             end
@@ -93,26 +114,37 @@ immutable SzkxkyBasis{I<:Integer}
             i = 0
             # position in bit array
             bit = 1
+
             while bit < l.N
+
                 # find a 1 bit whose following neighbor is 0
                 if readBit(b,bit) == 1
+
                     if readBit(b,bit+1) == 1
                         i += 1
                     else
+
                         # shuffle bits over
                         for J::Int64 in 1:i
                             b = setBit(b,J)
                         end
+
                         for J::Int64 in i+1:bit
                             b = clearBit(b,J)
                         end
+
                         b = setBit(b,bit+1)
+
                         # then break to next loop
                         break
+
                     end
+
                 end
+
                 # to the next bit
                 bit += 1
+
             end
 
             # if all 1s got shifted completely to the left, then all states are explored
@@ -124,13 +156,14 @@ immutable SzkxkyBasis{I<:Integer}
 
         # construct basis
         new(bList,nList,length(bList))
+
     end
 
 end
 
 
 # search ordered basis for index of integer representation of spin state
-function basisIndex{I<:Integer}(b::I,basis::SzkxkyBasis{I})
+function basisIndex{I<:Integer}(b::I,basis::reducedBasis{I})
     bIndex::UnitRange{Int64} = searchsorted(basis.b::Array{I,1},b)::UnitRange{Int64}
     if !isempty(bIndex)
         # return Int32 because basis has less than 2 billion elements and need to save these in sparse Hamiltonian
@@ -142,4 +175,4 @@ end
 
 
 # return the type of the basis elements
-Base.eltype(basis::SzkxkyBasis) = eltype(basis.b)
+Base.eltype(basis::reducedBasis) = eltype(basis.b)

@@ -5,7 +5,7 @@
 
 
 # function for building the sparse S^2 operator
-function constructSparseS2(basis::SzkxkyBasis,s::sector,l::lattice)
+function constructSparseS2(basis::reducedBasis,s::sector,l::lattice)
 
     # lattice
     Lx::Int64 = l.Lx
@@ -14,6 +14,8 @@ function constructSparseS2(basis::SzkxkyBasis,s::sector,l::lattice)
     # momentum
     kx::Float64 = s.kx
     ky::Float64 = s.ky
+    # inversion number
+    z::Int64 = s.z
 
     # basis type
     bType::Type = eltype(basis)
@@ -33,7 +35,7 @@ function constructSparseS2(basis::SzkxkyBasis,s::sector,l::lattice)
     sPwij::Array{Int64,2} = Array{Int64,2}(N,N)
     a::bType = convert(bType,0)
     aRep::bType = convert(bType,0)
-    lx::Int64 = ly::Int64 = 0
+    lx::Int64 = ly::Int64 = g::Int64 = 0
     aRepIndex::Int32 = Int32(0)
     S2ij::Complex128 = 0.0+0.0im
     # -------------------------------------
@@ -76,12 +78,12 @@ function constructSparseS2(basis::SzkxkyBasis,s::sector,l::lattice)
                     # the bra
                     a = XiXj(b,i,j)
                     # the rep and translation of the bra
-                    aRep,lx,ly = representative(a,l)
+                    aRep,lx,ly,g = representative(a,l)
                     # search for this rep in the basis
                     aRepIndex = basisIndex(aRep,basis)
                     if aRepIndex != 0 && bIndex > aRepIndex # only keep upper triangle
                         # the matrix element
-                        S2ij = 0.5*(1-sPwij[i,j])*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb)
+                        S2ij = 0.5*(1-sPwij[i,j])*(z^g)*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb)
 
                         push!(I,aRepIndex)
                         push!(Mpointers,appendSet!(S2ij,M))
@@ -110,10 +112,10 @@ end
 
 
 # function for in place multiplication by the S^2 operator without storing it
-function S2_mul_psi!(basis::SzkxkyBasis,s::sector,l::lattice,S2psi::Vector{Complex128},psi::Vector{Complex128})
+function S2_mul_psi!(basis::reducedBasis,s::sector,l::lattice,S2psi::Vector{Complex128},psi::Vector{Complex128})
 
     # clear output Vector
-    S2psi .= 0
+    S2psi .= 0.0
 
     # lattice
     Lx::Int64 = l.Lx
@@ -122,6 +124,7 @@ function S2_mul_psi!(basis::SzkxkyBasis,s::sector,l::lattice,S2psi::Vector{Compl
     # momentum
     kx::Float64 = s.kx
     ky::Float64 = s.ky
+    z::Float64 = s.z
 
     # basis type
     bType::Type = eltype(basis)
@@ -135,7 +138,7 @@ function S2_mul_psi!(basis::SzkxkyBasis,s::sector,l::lattice,S2psi::Vector{Compl
     sPwij::Array{Int64,2} = Array{Int64,2}(N,N)
     a::bType = convert(bType,0)
     aRep::bType = convert(bType,0)
-    lx::Int64 = ly::Int64 = 0
+    lx::Int64 = ly::Int64 = g::Int64 = 0
     aRepIndex::Int32 = Int32(0)
     S2ij::Complex128 = 0.0+0.0im
     # -------------------------------------
@@ -177,12 +180,12 @@ function S2_mul_psi!(basis::SzkxkyBasis,s::sector,l::lattice,S2psi::Vector{Compl
                     # the bra
                     a = XiXj(b,i,j)
                     # the rep and translation of the bra
-                    aRep,lx,ly = representative(a,l)
+                    aRep,lx,ly,g = representative(a,l)
                     # search for this rep in the basis
                     aRepIndex = basisIndex(aRep,basis)
                     if aRepIndex != 0
                         # the matrix element
-                        S2ij = 0.5*(1-sPwij[i,j])*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb)
+                        S2ij = 0.5*(1-sPwij[i,j])*(z^g)*exp(-1.0im*(kx*lx+ky*ly))*sqrt(basis.n[aRepIndex]/nb)
                         # contributing to the output vector
                         S2psi[aRepIndex] += S2ij*psi[bIndex]
                     end

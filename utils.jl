@@ -118,7 +118,7 @@ end
 function appendSet!{T<:Number}(elem::T,set::Vector{T})
 
     for (index::Int64,item::T) in enumerate(set)
-        if abs(elem - item) < 0.0000000001
+        if abs(elem - item) < 0.000001
             return index::Int64
         end
     end
