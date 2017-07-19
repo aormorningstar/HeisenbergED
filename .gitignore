@@ -7,3 +7,4 @@ testing/*
 *.out*
 .ipynb_checkpoints/analyseSpectralData-checkpoint.ipynb
 .ipynb_checkpoints/main-checkpoint.ipynb
+temp/*
