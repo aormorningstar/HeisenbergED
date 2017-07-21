@@ -44,7 +44,7 @@ function main(Lx::Int64,Ly::Int64,J1::Float64,J2::Float64,K::Float64,Sz::Int64,m
     # ritzVec = true if you want the eigenvectors returned too
     ritzVec = true
     # number of Krylov vectors in eigenvalue calculation
-    numKrylovVecs = 40
+    numKrylovVecs = 10
     # maximum number of iterations to converge eigenvalues
     maxIter = 200
 
