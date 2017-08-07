@@ -1,10 +1,23 @@
 # lattice.jl
-# defining the lattice connectivity for rectangular 2D lattice with periodic boundaries
+# defining the lattice connectivity for rectangular 2D lattice with
+# periodic boundaries
 # Alan Morningstar
 # May 2017
 
 
 # convert single integer site index to xy indexing
+# NOTE: lattice sites are labelled like the following example
+#
+# integer labelling
+# -----------------
+# 34
+# 12
+#
+# xy labelling
+# ------------
+# (0,1)(1,1)
+# (0,0)(1,0)
+#
 function xyIndex(site::Int64,Lx::Int64,Ly::Int64)
 
     y::Int64,x::Int64 = divrem(site-1,Lx)
@@ -42,7 +55,13 @@ function siteIndex(xy::Tuple{Int64,Int64},Lx::Int64,Ly::Int64)
 end
 
 
-# find indices of neighbors specified by a translation vectors T
+# find indices of neighbors specified by a translation vectors T.
+# takes in tuple of vectors pointing to so-called neighbors (this is loosely
+# defined and can be used to collect---for each site---a list of 'neighboring'
+# sites that are connected to it by the Hamiltonian)
+# ex: if the Hamiltonian couples plaquette spins and next nearest neighbors,
+#     then include those in this list so they are easily accessed by other
+#     customizable functions (like building the Hamiltonian)
 function neighbors(site::Int64,T::Array{Tuple{Int64,Int64},1},Lx::Int64,Ly::Int64)
 
     # use xy indexing just to compute neighbors
@@ -60,16 +79,18 @@ function neighbors(site::Int64,T::Array{Tuple{Int64,Int64},1},Lx::Int64,Ly::Int6
 end
 
 
-#-- define the lattice
-
-# plaquette sites corresponding to a given site (p1) in the bottom left of the plaquette
-# p3L indicates p3 on the plaquette to the left, similarly for p1D on the plaquette in the downwards direction
+# NOTE: plaquette sites corresponding to a given site (p1) in the bottom left
+# of the plaquette.
+# p3L indicates p3 on the plaquette to the left, similarly for p1D on the
+# plaquette in the downwards direction
 #
 # p3L--p3--p4
 #   |  |Plq|
 # p1L--p1--p2
 #  |  |   |
 #   p1D p2D
+#
+# this is useful for J1-J2-K model
 
 
 # container for lattice properties
@@ -96,7 +117,8 @@ immutable lattice
 
         neighborsList = [neighbors(site,neighborVectors,Lx,Ly) for site in 1:Lx*Ly]
 
-        # rough code, needs cleanup
+        # rough code, needs cleanup.
+        # just makes the useful masks
         # ------------------------------------------
         TxMx1::UInt64 = UInt64(1)<<(Lx-1)
         TxMx2::UInt64 = TxMx1 - UInt64(1)
@@ -118,25 +140,26 @@ immutable lattice
 end
 
 
-# x translation operator
+# x translation operator, shifts spin values to the right on the lattice
 function Tx{I<:Integer}(b::I,l::lattice)
     return ((b & l.TxMask1) >> (l.LxMinus1) | ((b & l.TxMask2) << 1))
 end
 
 
-# y translation operator
+# y translation operator, shifts spin values up on the lattice
 function Ty{I<:Integer}(b::I,l::lattice)
     return ((b & l.TyMask1) >> (l.NMinusLx) | ((b & l.TyMask2) << l.Lx))
 end
 
 
-# spin flip operator
+# spin flip operator, flips all spins (bits)
 function Z{I<:Integer}(b::I,l::lattice)
     return ( l.ZMask $ b )
 end
 
 
-# find related representative state and what translation relates the two states
+# find the related representative state and what translation and spin flip
+# relate the two states
 function representative{I<:Integer}(b::I,l::lattice)
 
     # rep. state
@@ -182,6 +205,8 @@ function representative{I<:Integer}(b::I,l::lattice)
 
     end
 
+    # return lx, ly, and g are the powers of their respective operators
+    # Tx,Ty,Z which---when applied to the state b---yield the representative
     return rep::I,lx::Int64,ly::Int64,g::Int64
 
 end

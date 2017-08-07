@@ -4,27 +4,28 @@
 # June 2017
 
 
-#-- type
-
 immutable sparseHermitian{TI<:Integer,TM<:Number}
 
-    # NOTE: diagonal elements here should have been divided by 2, only the upper triangle of the off diagonal elements are included
+    # NOTE NOTE NOTE: diagonal elements here should have been divided by 2
+    #                 and only the upper triangle of the off diagonal
+    #                 elements should be given
 
     # number of rows in the matrix
     nRows::Int64
     # number of columns in the matrix
     nCols::Int64
-    # indices of the first non-zero value of each column
+    # row numbers of the first non-zero value in each column
     colPntrs::Vector{Int64}
     # row indices of non-zero elements
     rowIndcs::Vector{TI}
     # non-zero matrix element values
     nzVals::Vector{TM}
 
-    ## optional for matrices with few unique matrix element values ##
+    # NOTE: optional, use for matrices with few unique matrix element values
+    #       to save memory
     # non-zero matrix element pointers
     nzPntrs::Vector{TI}
-    # sparse pointer matrix
+    # is this a sparse pointer matrix? i.e. did you give nzPntrs?
     sparsePntrs::Bool
 
     # constructors
@@ -38,12 +39,16 @@ immutable sparseHermitian{TI<:Integer,TM<:Number}
 end
 
 
-#-- methods
+## methods
 
-# in place matrix*vector multiplication
+
+# in place matrix * vector multiplication
 function Base.A_mul_B!(y::AbstractVector,M::sparseHermitian,x::AbstractVector)
 
-    # NOTE: this assumes the sparse Hermitian matrix has been built properly, with diagonal matrix elements divided by 2, and only the upper triangle of the off-diagonal elements included
+    # NOTE NOTE NOTE: this assumes the sparse Hermitian matrix has been built
+    #                 properly, with diagonal matrix elements given already
+    #                 divided by 2, and only the upper triangle of the
+    #                 off-diagonal elements given
 
     # clear output vector
     y .= 0.0
@@ -73,26 +78,35 @@ function Base.A_mul_B!(y::AbstractVector,M::sparseHermitian,x::AbstractVector)
 
 end
 
+
 # size of the matrix representation
 Base.size(M::sparseHermitian) = (M.nRows, M.nCols)
+
 
 # this type is a 2D matrix
 Base.ndims(M::sparseHermitian) = 2
 
+
 # type of matrix elements
 Base.eltype(M::sparseHermitian) = eltype(M.nzVals)
+
 
 # Hermitian is not, in general, symmetric
 Base.issymmetric(M::sparseHermitian) = false
 
+
 # this type is for Hermitian matrices
 Base.ishermitian(M::sparseHermitian) = true
+
 
 # number of non-zero matrix elements
 Base.nnz(M::sparseHermitian) = max(length(M.nzVals),length(M.nzPntrs))
 
-# matrix*vector multiplication
+
+# matrix * vector multiplication
 Base.:*(M::sparseHermitian,x::AbstractVector) = Base.A_mul_B!(similar(x,promote_type(Base.eltype(M),eltype(x)),size(M,1)),M,x)
 
-# conjugate transpose matrix*vector multiplication, same as M*v for Hermitian matrices
+
+# conjugate transpose matrix * vector multiplication
+# NOTE: same as M*v for Hermitian matrices
 Base.Ac_mul_B!(y::AbstractVector,M::sparseHermitian,x::AbstractVector) = Base.A_mul_B!(y,M,x)

@@ -1,5 +1,5 @@
 # basis.jl
-# reduced basis in the Sz,kx,ky symmetry sector
+# reduced basis in the Sz,kx,ky,z symmetry sector
 # Alan Morningstar
 # May 2017
 
@@ -7,9 +7,9 @@
 # container for symmetry sector
 immutable sector
 
-    # z spin
+    # spin along the z-axis
     Sz::Int64
-    # momentum
+    # momentum in x and y directions
     kx::Float64
     ky::Float64
     # spin inversion quantum number
@@ -18,12 +18,13 @@ immutable sector
 end
 
 
-# function for computing the normalization constant Na such that the momentum state is 1/sqrt(Na) * sum(phase * TxTy |b>)
+# function for computing the normalization constant Na of
+# the Tx,Ty,Z symmetrized state
 function normConstant{I<:Integer}(b::I,l::lattice,s::sector)
 
-    # sum of phases
+    # sum of phases in the symmetrization
     F::Complex128 = 0.0+0.0im
-    # currrent transformed states
+    # currrent T and Z transformed states
     Tb::I = b
     ZTb::I = Z(b,l)
     # set of transformed states in integer rep.
@@ -79,7 +80,7 @@ immutable reducedBasis{I<:Integer}
     b::Array{I,1}
     # list of corresponding normalization constants
     n::Array{Float64,1}
-    # dimension of Hilbert space
+    # dimension of reduced Hilbert space
     dim::Int64
 
     # constructor
@@ -95,22 +96,23 @@ immutable reducedBasis{I<:Integer}
         n1::Int64 = div(l.N,2)-s.Sz
         b::I = convert(I,2^n1-1)
 
-        # allocate memory
+        # allocate memory once here
         n::Float64 = 0.0
         i::Int64 = 0
         bit::Int64 = 0
 
         while true
-            # check if this state meets the required kx,ky
+            # check if this state has normalization constant = 0, if yes
+            # then add it to the basis
             n = normConstant(b,l,s)
 
-            # if valid rep state, add info to basis
             if n > 0.000001
                 push!(bList,b)
                 push!(nList,n)
             end
 
             # counter of 1 bits to the right (in binary convention)
+            # NOTE: these are just temporary variables for the 'binary odometer'
             i = 0
             # position in bit array
             bit = 1
@@ -147,7 +149,8 @@ immutable reducedBasis{I<:Integer}
 
             end
 
-            # if all 1s got shifted completely to the left, then all states are explored
+            # if all 1s got shifted completely to the left, then all states
+            # are explored
             if bit == l.N
                 break
             end
@@ -162,15 +165,21 @@ immutable reducedBasis{I<:Integer}
 end
 
 
-# search ordered basis for index of integer representation of spin state
+# search ordered basis for index (or location in the basis) of an integer
+# representation of a spin state
+# NOTE: basis has less than ~ 2 billion states, else modify to use Int64
 function basisIndex{I<:Integer}(b::I,basis::reducedBasis{I})
+
     bIndex::UnitRange{Int64} = searchsorted(basis.b::Array{I,1},b)::UnitRange{Int64}
+
     if !isempty(bIndex)
-        # return Int32 because basis has less than 2 billion elements and need to save these in sparse Hamiltonian
+        # return Int32 because basis has less than 2 billion elements
+        # and need to save these in sparse Hamiltonian
         return Int32(bIndex[1])::Int32
     else
         return Int32(0)::Int32
     end
+
 end
 
 

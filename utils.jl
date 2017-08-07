@@ -16,7 +16,7 @@ function clearBit{I<:Integer}(i::I,bit::Int64)
 end
 
 
-# toggle a bit
+# toggle a bit 0<->1
 function toggleBit{I<:Integer}(i::I,bit::Int64)
     return (i $ (1 << (bit-1)))::I
 end
@@ -38,7 +38,8 @@ function swapBits{I<:Integer}(i::I,bit1::Int64,bit2::Int64)
 end
 
 
-# count number of unique elements in an array of Ints
+# count number of unique elements in an array of real numbers
+# NOTE: also sorts the list in place
 function numUnique!{I<:Real}(Tbs::Array{I,1})
     # first sort the list in place
     sort!(Tbs)
@@ -57,31 +58,35 @@ end
 
 # function for flipping two spins of a basis state
 function XiXj{I<:Integer}(b::I,i::Int64,j::Int64)
-    # b - integer rep of state
-    # i,j - sites of spin flips
+    # b - integer representation of spin state
+    # i,j - sites (bits) to be flipped
     return (b $ ( (1<<(i-1)) | (1<<(j-1)) ))::I
 end
 
 
 # function for flipping four spins of a basis state
 function XiXjXkXl{I<:Integer}(b::I,i::Int64,j::Int64,k::Int64,l::Int64)
-    # b - integer rep of state
-    # i,j,k,l - sites of spin flips
+    # b - integer representation of spin state
+    # i,j,k,l - sites (bits) to be flipped
     return (b $ ( (1<<(i-1)) | (1<<(j-1)) | (1<<(k-1)) | (1<<(l-1)) ))::I
 end
 
 
 # function for computing (-1)^(positive integer)
+# NOTE: this is faster and simpler than using teh built in exp() function
+#       for this specific case
 function simplePower{I<:Integer}(i::I)
     if readBit(i,1) == 0
-        return 1::Int64
+        return 1
     else
-        return -1::Int64
+        return -1
     end
 end
 
 
-# function for sorting multiple lists in place based on the values of another list which is also sorted
+# function for sorting multiple lists (M) in place based on the values of
+# another list (I) of real numbers which also gets sorted
+# NOTE: this is a basic implementation of quicksort
 function sortTwo!{TI<:Real}(low::Int64,high::Int64,I::Vector{TI},M...)
     if low < high
         p::Int64 = partition!(low,high,I,M...)
@@ -114,7 +119,10 @@ function partition!{TI<:Real}(low::Int64,high::Int64,I::Vector{TI},M...)
 end
 
 
-# find the index of the first instance of an element in a set (vector), if it's not in the set then append the element and return it's index
+# find the index of the first instance of an element in a vector (set), if it's
+# not in the vector then append it as the element and return it's index
+# NOTE: there is a hard-coded threshold set to say when two elements are close
+#       enough to be considered the same
 function appendSet!{T<:Number}(elem::T,set::Vector{T})
 
     for (index::Int64,item::T) in enumerate(set)

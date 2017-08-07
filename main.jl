@@ -1,7 +1,7 @@
 # main.jl
-# exact diagonalization study of J-K Hamiltonian
+# main function for ED study of J-K Hamiltonian
 # Alan Morningstar
-# May 2017
+# June 2017
 
 
 using ArgParse
@@ -17,7 +17,24 @@ include("sparseS2.jl")
 
 
 # main function
-function main(Lx::Int64,Ly::Int64,J1::Float64,J2::Float64,K::Float64,Sz::Int64,mx::Int64,my::Int64,z::Int64,verbose::Bool)
+function main(
+              Lx::Int64, # lattice length in x direction
+              Ly::Int64, # lattice length in y direction
+              J1::Float64, # nearest neighbor coupling
+              J2::Float64, # next nearest neighbor coupling
+              K::Float64, # plaquette coupling
+              Sz::Int64, # spin along the z-axis
+              mx::Int64, # momentum-related number, kx=2*pi*mx/Lx
+              my::Int64, # momentum-related number, ky=2*pi*my/Ly
+              z::Int64, # spin-inversion number
+              numEigs::Int, # number of eigenvalues desired
+              tolerance::Float64, # strictness of convergence criterion
+              numKrylovVecs::Int, # number of vectors used in Krylov subspace
+              maxIter::Int, # max number of Arnoldi iterations
+              verbose::Bool, # print details while running?
+              )
+
+
     # number of lattice sites
     N = Lx*Ly
     # momentum
@@ -37,17 +54,6 @@ function main(Lx::Int64,Ly::Int64,J1::Float64,J2::Float64,K::Float64,Sz::Int64,m
             println("z = ",z)
         end : nothing
 
-    # number of eigenvalues desired
-    numEigs = 4
-    # a tolerance for error
-    tolerance = 10.^(-8.)
-    # ritzVec = true if you want the eigenvectors returned too
-    ritzVec = true
-    # number of Krylov vectors in eigenvalue calculation
-    numKrylovVecs = 10
-    # maximum number of iterations to converge eigenvalues
-    maxIter = 200
-
     # plaquette (x,y) vectors, locating p1,p2,p3,p4 on the plaquette of the p1 site and p1D,p2D,p1L,p3L on adjacent plaquettes
     neighborVectors = [(0,0),(1,0),(0,1),(1,1),(0,-1),(1,-1),(-1,0),(-1,1)]
     # define the lattice
@@ -57,6 +63,7 @@ function main(Lx::Int64,Ly::Int64,J1::Float64,J2::Float64,K::Float64,Sz::Int64,m
     s = sector(Sz,kx,ky,z)
 
     # construct the basis
+    verbose ? println("Constructing the basis.") : nothing
     basis = reducedBasis{UInt64}(l,s)
     verbose ? println("Dimension of reduced Hilbert space is ",basis.dim,".") : nothing
 
@@ -68,11 +75,12 @@ function main(Lx::Int64,Ly::Int64,J1::Float64,J2::Float64,K::Float64,Sz::Int64,m
     H = constructSparseHam(basis,c,s,l)
 
     # compute eigenvalues
+    # ritzVec = true if you want the eigenvectors returned too
     #:LM stands for largest magnitude, :SR for smallest real part
     verbose ? println("Computing eigenvalues and eigenvectors.") : nothing
-    eigsResult = eigs(H; nev=numEigs,ncv=numKrylovVecs,maxiter=maxIter, which=:SR, tol=tolerance, ritzvec=ritzVec)
+    eigsResult = eigs(H; nev=numEigs,ncv=numKrylovVecs,maxiter=maxIter, which=:SR, tol=tolerance, ritzvec=true)
 
-    # clear Hamiltonian memory
+    # clear Hamiltonian memory manually
     H = nothing
 
     # compile data
@@ -90,7 +98,7 @@ function main(Lx::Int64,Ly::Int64,J1::Float64,J2::Float64,K::Float64,Sz::Int64,m
     # S(S+1) values
     S2Data = round(Int64,real(S2expectations(basis,s,l,eigsResult[2])));
 
-    # clear eigsResult memory
+    # clear eigsResult memory manually
     eigsResult = nothing
 
     # create DataFrame
@@ -136,7 +144,7 @@ s = ArgParseSettings()
     "--mx"
         help = "x momentum mx such that kx = 2 pi mx / Lx"
         arg_type = Int64
-          default = 0
+        default = 0
     "--my"
         help = "y momentum my such that ky = 2 pi my / Ly"
         arg_type = Int64
@@ -149,6 +157,22 @@ s = ArgParseSettings()
         help = "print info during computation? true or false"
         arg_type = Bool
         default = true
+    "--numEigs"
+        help = "number of eigenvalues desired"
+        arg_type = Int64
+        default = 4
+    "--tol"
+        help = "tolerance for error in Arnoldi convergence"
+        arg_type = Float64
+        default = 10.^(-8.)
+    "--numKrylovVecs"
+        help = "number of vectors in the Krylov subspace"
+        arg_type = Int64
+        default = 10
+    "--maxIter"
+        help = "nmax number of Arnoldi iterations"
+        arg_type = Int64
+        default = 200
 
 end
 
@@ -166,6 +190,11 @@ data = main(
             argsDict["mx"],
             argsDict["my"],
             argsDict["z"],
+            argsDict["z"],
+            argsDict["numEigs"],
+            argsDict["tol"],
+            argsDict["numKrylovVecs"],
+            argsDict["maxIter"],
             argsDict["verbose"]
             )
 
