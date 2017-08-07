@@ -27,10 +27,10 @@ function main(
               mx::Int64, # momentum-related number, kx=2*pi*mx/Lx
               my::Int64, # momentum-related number, ky=2*pi*my/Ly
               z::Int64, # spin-inversion number
-              numEigs::Int, # number of eigenvalues desired
+              numEigs::Int64, # number of eigenvalues desired
               tolerance::Float64, # strictness of convergence criterion
-              numKrylovVecs::Int, # number of vectors used in Krylov subspace
-              maxIter::Int, # max number of Arnoldi iterations
+              numKrylovVecs::Int64, # number of vectors used in Krylov subspace
+              maxIter::Int64, # max number of Arnoldi iterations
               verbose::Bool, # print details while running?
               )
 
@@ -189,7 +189,6 @@ data = main(
             argsDict["Sz"],
             argsDict["mx"],
             argsDict["my"],
-            argsDict["z"],
             argsDict["z"],
             argsDict["numEigs"],
             argsDict["tol"],
