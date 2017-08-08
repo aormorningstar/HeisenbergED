@@ -28,7 +28,7 @@ There is a file named "main.jl" for running simulations. Command line arguments 
 | numKrylovVecs  | dimension of the Krylov subspace  | Int  | 10  |
 | maxIter  | maximum number of Arnoldi iterations  | Int  | 200  |
 
-For example, a slurm job script could like like
+For example, a slurm job script could look like
 
 ```
 #!/bin/bash                                                                        
