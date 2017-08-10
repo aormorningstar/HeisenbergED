@@ -51,7 +51,7 @@ where a 6x6 lattice is given 100 GB and 2 days to run (this should actually take
 
 3. If the matrix elements of the Hamiltonian could be generated fast enough, the Hamiltonian would never need to be stored. It could just be calculated on the fly every time a matrix-vector product is needed, and this would greatly reduce the memory cost of running the code. The bottleneck in calculating matrix elements are the following two problems, the first of which is only a bottleneck if translational symmetry is used, which it currently is in this code.
 
-..* a) given a spin state, find it's representative (if you don't know what this means, see the topic of momentum states in Section 4.1 of [Sandvik's notes (2011)](https://arxiv.org/abs/1101.3281)) 
+..* a) given a spin state, find it's representative (if you don't know what this means, see the topic of momentum states in Section 4.1 of [Sandvik's notes 2011](https://arxiv.org/abs/1101.3281)) 
 
 ..* b) given a representative state, find its location in the basis of representatives
 
