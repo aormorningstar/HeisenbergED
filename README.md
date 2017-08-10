@@ -3,7 +3,9 @@ Arnoldi diagonalization of a spin Hamiltonian on a rectangular, two-dimensional 
 
 Outputs energies, and total-spin, spin-inversion, z-spin, and momentum quantum numbers for low lying eigenstates.
 
-The provided spin Hamiltonian is the J1-J2-J3-J4-K model from Equation 4 of [this paper](https://arxiv.org/abs/1705.06289), with J3 and J4 fixed to 0 currently.
+The provided spin Hamiltonian is the J1-J2-J3-J4-K model from Equation 4 of [Sachdev's paper (2017)](https://arxiv.org/abs/1705.06289), with J3 and J4 fixed to 0 currently.
+
+For an almost-complete overview of methods used in this code, see [these notes by Sandvik (2011)](https://arxiv.org/abs/1101.3281).
 
 ## Requirements
 Julia 0.5, DataFrames, ArgParse
@@ -38,6 +40,10 @@ julia main.jl --Lx 6 --Ly 6 --J1 1.0 --J2 0.0 --K 0.0 --Sz 0 --mx 0 --my 0 --z 1
 ```
 
 where a 6x6 lattice is given 100 GB and 2 days to run (this should actually take ~85 GB and ~30 hours for the largest symmetry sectors of a 6x6 J-K Hamiltonian).
+
+## Possible Improvements
+
+This section will be updated with strategies for improvements to this code.
 
 ## Author
 
