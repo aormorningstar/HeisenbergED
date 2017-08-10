@@ -5,7 +5,7 @@ Outputs energies, and total-spin, spin-inversion, z-spin, and momentum quantum n
 
 The provided spin Hamiltonian is the J1-J2-J3-J4-K model from Equation 4 of [Sachdev's paper (2017)](https://arxiv.org/abs/1705.06289), with J3 and J4 fixed to 0 currently.
 
-For an almost-complete overview of methods used in this code, see [these notes by Sandvik (2011)](https://arxiv.org/abs/1101.3281).
+For an almost-complete overview of methods used in this code, see Section 4.1 and 4.4 of [these notes by Sandvik (2011)](https://arxiv.org/abs/1101.3281).
 
 ## Requirements
 Julia 0.5, DataFrames, ArgParse
