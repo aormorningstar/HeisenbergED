@@ -43,7 +43,9 @@ where a 6x6 lattice is given 100 GB and 2 days to run (this should actually take
 
 ## Possible Improvements
 
-This section will be updated with strategies for improvements to this code.
+*This section will be updated with more strategies for improvements to this code.
+
+1. The current version uses julia's eigs(), a wrapper around ARPACK, which uses implicitely restarted Arnoldi iterations to find low lying eigenvalues. This method stores on the order of numKrylovVecs vectors, which is significantly larger than a Lanczos method, which only requires you to store three. So, need to implement a simple Lanczos algorithm such as that found in Section 4.2 of [(Sandvik, 2011)](https://arxiv.org/abs/1101.3281). This will also speed up the time to find eigenvalues because you can leave out any re-orthonormalization procedure and just make sure to monitor the Lanczos algorithm to avoid "ghost states" which arise when the Lanczos fails due to loss of orthogonality of the eigenvectors it is calculating.
 
 ## Author
 
