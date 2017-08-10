@@ -55,7 +55,7 @@ where a 6x6 lattice is given 100 GB and 2 days to run (this should actually take
 
    b) given a representative state, find its location in the basis of representatives
 
-A strategy for solving these problems efficiently is given by [Weisse (2013)](https://arxiv.org/abs/1210.1701), with reference to initial work by [Lin (1990)](https://journals.aps.org/prb/abstract/10.1103/PhysRevB.42.6561). If translational symmetry is not used, [Lin's strategy](https://journals.aps.org/prb/abstract/10.1103/PhysRevB.42.6561) will be enough to avoid storing the Hamiltonian.
+   A strategy for solving these problems efficiently is given by [Weisse (2013)](https://arxiv.org/abs/1210.1701), with reference to initial work by [Lin (1990)](https://journals.aps.org/prb/abstract/10.1103/PhysRevB.42.6561). If translational symmetry is not used, [Lin's strategy](https://journals.aps.org/prb/abstract/10.1103/PhysRevB.42.6561) will be enough to avoid storing the Hamiltonian.
 
 4. If spin systems with more than 36 spins are desired, the code would need to be modified to be massively parallel. This means dividing the Hamiltonian up into chunks which fit on single cores, and communicating between cores only when absolutely necessary. When using this strategy, one should carefully consider whether using translational symmetry is worth it. 
 
