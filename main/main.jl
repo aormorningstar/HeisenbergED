@@ -7,13 +7,7 @@
 using ArgParse
 using DataFrames
 
-
-include("utils.jl")
-include("lattice.jl")
-include("basis.jl")
-include("sparseHermitian.jl")
-include("sparseHam.jl")
-include("sparseS2.jl")
+include("../src/HeisenbergED.jl")
 
 
 # main function
